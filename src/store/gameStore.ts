@@ -104,7 +104,7 @@ interface GameState {
       comboBonus?: number
        реферальныйКод?: string
   приглашённые?: string[]
-  бонусыЗаПриглашения?: number
+  бонусЗаПриглашения?: number
   реферальныйСчётчик?: number
       сгенерироватьРеферальныйКод?: () => void
   получитьБонусЗаПриглашение?: () => Promise<boolean>
