@@ -1,5 +1,6 @@
 
-// @ts-nocheckimport { useState } from 'react'
+// @ts-nocheckimport 
+{ useState } from 'react'
 import { useGameStore } from '../store/gameStore'
 
 const CARS_LIST = [
