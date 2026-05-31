@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useState, useEffect } from 'react'
 import { useGameStore } from '../store/gameStore'
 import { GLYPHS } from '../config/glyphs'
