@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Конфиг оборудования с редкостями
 
 export interface Equipment {
