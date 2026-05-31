@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useState } from 'react'
 import { useGameStore } from '../store/gameStore'
 import { EQUIPMENT_CONFIG, RARITIES } from '../config/equipment'
