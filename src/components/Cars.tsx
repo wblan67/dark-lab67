@@ -1,5 +1,5 @@
-// @ts-nocheckimport 
-{ useState } from 'react'
+// @ts-nocheck
+import { useState } from 'react'
 import { useGameStore } from '../store/gameStore'
 
 const CARS_LIST = [
@@ -52,7 +52,6 @@ export default function Cars() {
     return Math.floor(базоваяЦена * (level + 1) * 1.5)
   }
   
-  // Функция для получения улучшенной вместимости
   const getRealCapacity = (car: typeof CARS_LIST[0]) => {
     if (car.id === 'walk') return car.capacity
     const level = getUpgradeLevel(car.id, 'capacity')
@@ -60,7 +59,6 @@ export default function Cars() {
     return Math.floor(car.capacity * множитель)
   }
   
-  // Функция для получения улучшенного времени
   const getRealTime = (car: typeof CARS_LIST[0]) => {
     if (car.id === 'walk') return car.time
     const level = getUpgradeLevel(car.id, 'speed')
@@ -113,7 +111,6 @@ export default function Cars() {
                 {capacityLevel > 0 && <span className="text-green-400 ml-1">(+{capacityLevel * 10}%)</span>}
               </div>
               
-              {/* Улучшения */}
               {isOwned && car.id !== 'walk' && (
                 <div className="mt-2 p-2 bg-gray-700/50 rounded-lg">
                   <div className="text-xs text-gray-400 mb-1">🔧 Улучшения:</div>
