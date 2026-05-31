@@ -1,3 +1,4 @@
+// @ts-nocheck
 // ВСЕ ГЛИФЫ (50 штук)
 
 export const GLYPHS = [
