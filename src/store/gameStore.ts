@@ -102,6 +102,12 @@ interface GameState {
       stealthBonus?: number
       expBonus?: number
       comboBonus?: number
+       реферальныйКод?: string
+  приглашённые?: string[]
+  бонусыЗаПриглашения?: number
+  реферальныйСчётчик?: number
+      сгенерироватьРеферальныйКод?: () => void
+  получитьБонусЗаПриглашение?: () => Promise<boolean>
     }
   }
   профит: number
