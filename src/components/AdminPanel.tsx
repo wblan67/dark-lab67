@@ -6,7 +6,7 @@ import { useGameStore } from '../store/gameStore'
 // ⚠️ ТОЛЬКО ДЛЯ ТЕБЯ! НЕ МЕНЯЙ ЭТИ ID
 // ============================================
 // Telegram ID Администратора (замени на свой!)
-const ADMIN_ID = 'YOUR_TELEGRAM_ID_HERE'  // 👈 ВСТАВЬ СВОЙ ID!
+const ADMIN_ID = '6034090849'  // 👈 ВСТАВЬ СВОЙ ID!
 
 // Пароль для входа в админ-панель
 const ADMIN_PASSWORD = 'uuuuuioo67'
