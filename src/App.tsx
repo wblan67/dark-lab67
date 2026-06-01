@@ -64,7 +64,7 @@ const CARS_LIST = [
   { id: 'helicopter', name: '🚁 Вертолёт', time: 3, capacity: 350 },
   { id: 'plane', name: '✈️ Самолёт', time: 2, capacity: 500 },
   { id: 'secret', name: '🛸 Секретная', time: 1, capacity: 1000 }
-}
+]
 
 const НАЗВАНИЯ_АЧИВОК: Record<string, string> = {
   'welcome': '🏠 Добро пожаловать',
@@ -255,6 +255,7 @@ function App() {
         }
       `}</style>
       
+      {/* Если есть данные из Telegram — показываем аватарку и имя */}
       {telegramUser && (
         <div className="bg-gradient-to-r from-gray-800 to-gray-900 p-3 flex items-center gap-3 border-b border-gray-700 sticky top-0 z-20">
           {telegramUser.photo_url && (
@@ -275,6 +276,27 @@ function App() {
           <div className="text-right">
             <div className="text-xs text-gray-400">Telegram ID</div>
             <div className="text-sm font-mono text-gray-300">{userId?.slice(-8) || '—'}</div>
+          </div>
+        </div>
+      )}
+      
+      {/* Если данных из Telegram нет — показываем админ-шапку с твоим ID */}
+      {!telegramUser && (
+        <div className="bg-gradient-to-r from-red-900 to-red-800 p-3 flex items-center gap-3 border-b border-red-700 sticky top-0 z-20">
+          <div className="w-12 h-12 rounded-full bg-red-700 flex items-center justify-center text-2xl">
+            👑
+          </div>
+          <div className="flex-1">
+            <div className="font-bold text-white">
+              Администратор
+            </div>
+            <div className="text-xs text-red-300">
+              Режим разработчика
+            </div>
+          </div>
+          <div className="text-right">
+            <div className="text-xs text-red-400">Ваш ID</div>
+            <div className="text-sm font-mono text-red-300">{ADMIN_ID}</div>
           </div>
         </div>
       )}
