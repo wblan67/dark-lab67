@@ -4,6 +4,7 @@ import { persist } from 'zustand/middleware'
 import { getBoxById } from '../config/boxes'
 import { EQUIPMENT_CONFIG, RARITIES, getEquipmentById } from '../config/equipment'
 import { GUILD_LEVELS, GUILD_UPGRADES, LAB_SKINS, CONVERSION_BONUSES, TEMP_BUFFS, GUILD_BASES, GUILD_QUESTS } from '../config/guilds'
+import { supabase } from '../lib/supabaseClient'  // ← ДОБАВЛЕНО!
 
 const CARS_CONFIG: Record<string, any> = {
   walk: { name: '🚶‍♂️ Пешком', time: 20, capacity: 10, level: 0 },
@@ -65,10 +66,6 @@ interface GameState {
     скорость: number
     вместимость: number
     надежность: number
-      // РЕФЕРАЛЫ
-  сгенерироватьРеферальныйКод: () => void
-  применитьРеферальныйКод: (code: string) => Promise<boolean>
-  получитьБонусЗаПриглашение: () => Promise<boolean>
   }>
   активнаяМашина: string
   активныеПродажи: Record<string, any>
@@ -102,12 +99,6 @@ interface GameState {
       stealthBonus?: number
       expBonus?: number
       comboBonus?: number
-       реферальныйКод?: string
-  приглашённые?: string[]
-  бонусЗаПриглашения?: number
-  реферальныйСчётчик?: number
-      сгенерироватьРеферальныйКод?: () => void
-  получитьБонусЗаПриглашение?: () => Promise<boolean>
     }
   }
   профит: number
@@ -116,10 +107,10 @@ interface GameState {
   
   // ========== РЕФЕРАЛЫ ==========
   рефералы: {
-    invitedBy: string | null        // кто пригласил (userId)
-    invitedUsers: string[]           // кого пригласил
-    totalReferrals: number           // сколько пригласил
-    rewardsClaimed: Record<string, boolean> // кому уже начислили бонус
+    invitedBy: string | null
+    invitedUsers: string[]
+    totalReferrals: number
+    rewardsClaimed: Record<string, boolean>
   }
   
   статистика: {
@@ -180,6 +171,10 @@ interface GameState {
   получитьИнстансыОборудования: (itemId: string) => string[]
   улучшитьМашину: (carId: string, тип: 'speed' | 'capacity' | 'reliability') => Promise<boolean>
   
+  // ========== ДОБАВЛЕНО: СОХРАНЕНИЕ В SUPABASE ==========
+  сохранитьПрогресс: () => Promise<void>
+  загрузитьПрогресс: (telegramId: string) => Promise<void>
+  
   // МЕТОДЫ ГИЛЬДИИ
   создатьГильдию: (name: string, description: string, type: string, focus: string, minLevel: number, emblem: string, color: string) => Promise<boolean>
   вступитьВГильдию: (guildId: string) => Promise<boolean>
@@ -214,6 +209,9 @@ interface GameState {
   обработатьРеферала: (referrerId: string) => Promise<{ rewarded: boolean; message: string }>
   получитьРеферальнуюСсылку: () => string
   забратьРеферальнуюНаграду: (userId: string) => Promise<boolean>
+  сгенерироватьРеферальныйКод: () => void
+  применитьРеферальныйКод: (code: string) => Promise<boolean>
+  получитьБонусЗаПриглашение: () => Promise<boolean>
 }
 
 const EXP_TO_LEVEL: Record<number, number> = {
@@ -385,8 +383,107 @@ export const useGameStore = create<GameState>()(
         ночнойВход: false
       },
 
+      // ========== ДОБАВЛЕНО: СОХРАНЕНИЕ В SUPABASE ==========
+      сохранитьПрогресс: async () => {
+        const state = get()
+        if (!state.userId) return
+        
+        try {
+          // Сохраняем в таблицу players
+          await supabase
+            .from('players')
+            .upsert({
+              id: state.userId,
+              balance: state.баланс,
+              level: state.уровень,
+              experience: state.опыт,
+              wanted_level: state.розыск,
+              active_car: state.активнаяМашина,
+              active_rank: state.активноеЗвание,
+              active_skin: state.активныйСкин,
+              updated_at: new Date()
+            })
+            .eq('id', state.userId)
+          
+          // Сохраняем статистику
+          await supabase
+            .from('stats')
+            .upsert({
+              player_id: state.userId,
+              total_earned: state.статистика?.всегоЗаработано || 0,
+              total_sales_count: state.статистика?.всегоПродаж || 0,
+              total_bribes: state.статистика?.всегоВзяток || 0,
+              total_raids: state.статистика?.всегоРейдов || 0,
+              total_trips: state.статистика?.всегоПоездок || 0,
+              total_repairs: state.статистика?.всегоРемонтов || 0,
+              play_time: state.статистика?.времяВИгре || 0,
+              total_clicks: state.статистика?.всегоКликов || 0,
+              streak_days: state.статистика?.дниПодряд || 0
+            })
+            .eq('player_id', state.userId)
+            
+          console.log('✅ Прогресс сохранён в Supabase')
+        } catch (error) {
+          console.error('❌ Ошибка сохранения:', error)
+        }
+      },
+
+      загрузитьПрогресс: async (telegramId: string) => {
+        try {
+          // Загружаем данные игрока
+          const { data: player } = await supabase
+            .from('players')
+            .select('*')
+            .eq('id', telegramId)
+            .single()
+          
+          if (player) {
+            set({
+              баланс: player.balance,
+              уровень: player.level,
+              опыт: player.experience,
+              розыск: player.wanted_level,
+              активнаяМашина: player.active_car || 'walk',
+              активноеЗвание: player.active_rank || 'street_dealer',
+              активныйСкин: player.active_skin || 'basement'
+            })
+          }
+          
+          // Загружаем статистику
+          const { data: stats } = await supabase
+            .from('stats')
+            .select('*')
+            .eq('player_id', telegramId)
+            .single()
+          
+          if (stats) {
+            set({
+              статистика: {
+                ...get().статистика,
+                всегоЗаработано: stats.total_earned || 0,
+                всегоПродаж: stats.total_sales_count || 0,
+                всегоВзяток: stats.total_bribes || 0,
+                всегоРейдов: stats.total_raids || 0,
+                всегоПоездок: stats.total_trips || 0,
+                всегоРемонтов: stats.total_repairs || 0,
+                времяВИгре: stats.play_time || 0,
+                всегоКликов: stats.total_clicks || 0,
+                дниПодряд: stats.streak_days || 0
+              }
+            })
+          }
+          
+          console.log('✅ Прогресс загружен из Supabase')
+        } catch (error) {
+          console.error('❌ Ошибка загрузки:', error)
+        }
+      },
+
+      // ОБНОВЛЁННЫЙ загрузитьПользователя (с вызовом загрузки из Supabase)
       загрузитьПользователя: async (telegramId) => {
-        set({ userId: telegramId, загрузка: false })
+        set({ userId: telegramId, загрузка: true })
+        await get().загрузитьПрогресс(telegramId)
+        set({ загрузка: false })
       },
 
       купитьПредмет: async (item, price) => {
@@ -399,6 +496,7 @@ export const useGameStore = create<GameState>()(
           баланс: баланс - price,
           инвентарь: { ...инвентарь, [item]: (инвентарь[item] || 0) + 1 }
         })
+        await get().сохранитьПрогресс()
         return true
       },
 
@@ -445,6 +543,7 @@ export const useGameStore = create<GameState>()(
         })
         
         alert(`✅ Куплен ${config.name} (⚪ Обычный) за $${цена}\n📦 Теперь у вас ${новыеИнстансы[itemId].length}/${config.maxCount} экземпляров`)
+        await get().сохранитьПрогресс()
         return true
       },
 
@@ -463,6 +562,7 @@ export const useGameStore = create<GameState>()(
         })
         
         alert(`✅ Куплен Амулет защиты! (${защитаОтСгорания + 1} шт.)`)
+        await get().сохранитьПрогресс()
         return true
       },
 
@@ -524,6 +624,7 @@ export const useGameStore = create<GameState>()(
         }
         
         get().проверитьВсеАчивки()
+        await get().сохранитьПрогресс()
         return true
       },
 
@@ -537,6 +638,7 @@ export const useGameStore = create<GameState>()(
           alert(`🎉 ПОВЫШЕНИЕ УРОВНЯ! Теперь ${новыйУровень} уровень!`)
         }
         get().проверитьВсеАчивки()
+        await get().сохранитьПрогресс()
       },
 
       починитьОборудование: async (instanceId) => {
@@ -595,7 +697,7 @@ export const useGameStore = create<GameState>()(
         })
         
         alert(`🔧 Отремонтировано ${config.name} (${RARITIES[данные.rarity]?.icon || '⚪'} ${RARITIES[данные.rarity]?.name || 'Обычный'})!\n💰 Стоимость: $${ценаРемонта.toLocaleString()}\n📊 Износ: ${текущийИзнос}% → 0%`)
-        
+        await get().сохранитьПрогресс()
         return true
       },
 
@@ -644,6 +746,7 @@ export const useGameStore = create<GameState>()(
         })
         
         alert(`🔧 Отремонтирована ${config.name}!\n💰 Стоимость: $${ценаРемонта}`)
+        await get().сохранитьПрогресс()
         return true
       },
 
@@ -733,6 +836,7 @@ export const useGameStore = create<GameState>()(
         
         alert(`✅ ${recipe.name} готов! +${реальныйВыход} грамм (эффективность ${Math.round(эффективность * 100)}%, +${опытЗаКрафт} EXP)`)
         get().проверитьВсеАчивки()
+        await get().сохранитьПрогресс()
         return true
       },
 
@@ -775,6 +879,7 @@ export const useGameStore = create<GameState>()(
         
         alert(`✅ Куплена: ${config.name}!`)
         get().проверитьВсеАчивки()
+        await get().сохранитьПрогресс()
         return true
       },
 
@@ -786,6 +891,7 @@ export const useGameStore = create<GameState>()(
         }
         set({ активнаяМашина: carId })
         alert(`✅ Теперь вы используете: ${CARS_CONFIG[carId]?.name || '🚶‍♂️ Пешком'}`)
+        await get().сохранитьПрогресс()
       },
 
       улучшитьМашину: async (carId, тип) => {
@@ -868,7 +974,7 @@ export const useGameStore = create<GameState>()(
         const carName = CARS_LIST[carId] || carId
         
         alert(`✅ Улучшена ${типУлучшения} ${carName} до ${текущийУровень + 1} уровня!\n💰 -$${цена.toLocaleString()}\n✨ Эффект: ${эффект}`)
-        
+        await get().сохранитьПрогресс()
         return true
       },
 
@@ -1028,6 +1134,7 @@ export const useGameStore = create<GameState>()(
         alert(сообщение)
         
         get().проверитьВсеАчивки()
+        await get().сохранитьПрогресс()
         return true
       },
 
@@ -1081,6 +1188,7 @@ export const useGameStore = create<GameState>()(
         alert(сообщение)
         
         get().проверитьВсеАчивки()
+        await get().сохранитьПрогресс()
         return true
       },
 
@@ -1110,6 +1218,7 @@ export const useGameStore = create<GameState>()(
         })
         alert(`🚨 ПОЛИЦЕЙСКИЙ РЕЙД! 🚨\nПотеряно: ${потеряноГрамм}г товара\nШтраф: $${штраф}`)
         get().проверитьВсеАчивки()
+        await get().сохранитьПрогресс()
       },
 
       купитьБизнес: async (id) => {
@@ -1135,6 +1244,7 @@ export const useGameStore = create<GameState>()(
         })
         alert(`✅ Куплен бизнес: ${бизнесКонфиг.name}!`)
         get().проверитьВсеАчивки()
+        await get().сохранитьПрогресс()
         return true
       },
 
@@ -1157,6 +1267,7 @@ export const useGameStore = create<GameState>()(
         })
         
         alert(`✅ Бизнес продан! Вы получили $${возврат.toLocaleString()} (50% от стоимости покупки)`)
+        await get().сохранитьПрогресс()
         return true
       },
 
@@ -1251,6 +1362,7 @@ export const useGameStore = create<GameState>()(
             }
             
             get().проверитьВсеАчивки()
+            await get().сохранитьПрогресс()
           }
         }, recipe.time * 1000)
       },
@@ -1334,6 +1446,7 @@ export const useGameStore = create<GameState>()(
           }
         }
         
+        await get().сохранитьПрогресс()
         return true
       },
 
@@ -1557,6 +1670,7 @@ export const useGameStore = create<GameState>()(
           навыки: { ...навыки, [id]: текущийУровень + 1 }
         })
         alert(`✅ ${навык.название} улучшен до ${текущийУровень + 1} уровня!`)
+        await get().сохранитьПрогресс()
         return true
       },
 
@@ -1580,6 +1694,7 @@ export const useGameStore = create<GameState>()(
           купленныеСкины: [...купленныеСкины, id]
         })
         alert(`✅ Скин ${скин.название} куплен!`)
+        await get().сохранитьПрогресс()
         return true
       },
 
@@ -1591,6 +1706,7 @@ export const useGameStore = create<GameState>()(
         }
         set({ активныйСкин: id })
         alert(`✅ Скин ${СКИНЫ.find(s => s.id === id)?.название} экипирован!`)
+        get().сохранитьПрогресс()
       },
 
       // ========== БОКСЫ И ГЛИФЫ ==========
@@ -1607,6 +1723,7 @@ export const useGameStore = create<GameState>()(
           set({ глифы: { ...глифы, [glyphId]: true } })
         }
         
+        await get().сохранитьПрогресс()
         return true
       },
 
@@ -1627,17 +1744,20 @@ export const useGameStore = create<GameState>()(
         
         set({ экипированныеГлифы: [...экипированныеГлифы, glyphId] })
         alert(`✅ Глиф экипирован!`)
+        get().сохранитьПрогресс()
       },
 
       снятьГлиф: (glyphId) => {
         const { экипированныеГлифы } = get()
         set({ экипированныеГлифы: экипированныеГлифы.filter(id => id !== glyphId) })
         alert(`✅ Глиф снят!`)
+        get().сохранитьПрогресс()
       },
 
       добавитьОсколки: (amount) => {
         const { осколки } = get()
         set({ осколки: осколки + amount })
+        get().сохранитьПрогресс()
       },
 
       // ========== МЕТОДЫ ГИЛЬДИИ ==========
@@ -1662,6 +1782,7 @@ export const useGameStore = create<GameState>()(
         }
         set({ баланс: баланс - 100000, гильдия: newGuild, всеГильдии: { ...всеГильдии, [guildId]: newGuild } })
         alert(`✅ Гильдия "${name}" создана!`)
+        await get().сохранитьПрогресс()
         return true
       },
 
@@ -1678,6 +1799,7 @@ export const useGameStore = create<GameState>()(
         const updatedGuild = { ...targetGuild, members: [...targetGuild.members, newMember], chat: [...targetGuild.chat, { id: Date.now().toString(), userId: 'bot', userName: '🤖 Бот', userRank: 'member', message: `👋 ${userName} вступил в гильдию!`, timestamp: Date.now() }] }
         set({ гильдия: updatedGuild, всеГильдии: { ...всеГильдии, [guildId]: updatedGuild } })
         alert(`✅ Вы вступили в гильдию "${targetGuild.name}"!`)
+        await get().сохранитьПрогресс()
         return true
       },
 
@@ -1690,6 +1812,7 @@ export const useGameStore = create<GameState>()(
         const updatedGuild = { ...гильдия, members: updatedMembers, chat: [...гильдия.chat, { id: Date.now().toString(), userId: 'bot', userName: '🤖 Бот', userRank: 'member', message: `👋 ${member?.userName} покинул гильдию...`, timestamp: Date.now() }] }
         set({ гильдия: null, всеГильдии: { ...всеГильдии, [гильдия.id]: updatedGuild } })
         alert(`✅ Вы покинули гильдию!`)
+        await get().сохранитьПрогресс()
         return true
       },
 
@@ -1706,6 +1829,7 @@ export const useGameStore = create<GameState>()(
         const updatedGuild = { ...гильдия, members: updatedMembers, chat: [...гильдия.chat, { id: Date.now().toString(), userId: 'bot', userName: '🤖 Бот', userRank: 'member', message: `${target.userName} исключён из гильдии!`, timestamp: Date.now() }] }
         set({ гильдия: updatedGuild, всеГильдии: { ...всеГильдии, [гильдия.id]: updatedGuild } })
         alert(`✅ Игрок ${target.userName} исключён из гильдии!`)
+        await get().сохранитьПрогресс()
         return true
       },
 
@@ -1722,6 +1846,7 @@ export const useGameStore = create<GameState>()(
         const updatedGuild = { ...гильдия, members: updatedMembers, chat: [...гильдия.chat, { id: Date.now().toString(), userId: 'bot', userName: '🤖 Бот', userRank: 'member', message: `${target.userName} назначен со-создателем!`, timestamp: Date.now() }] }
         set({ гильдия: updatedGuild })
         alert(`✅ ${target.userName} назначен со-создателем!`)
+        await get().сохранитьПрогресс()
         return true
       },
 
@@ -1747,6 +1872,7 @@ export const useGameStore = create<GameState>()(
         set({ баланс: баланс - price, гильдия: updatedGuild })
         alert(`✅ Куплено ${amount} 🪙 Тлена за $${price.toLocaleString()}!`)
         get().обновитьПрогрессКвеста('tlen', amount)
+        await get().сохранитьПрогресс()
         return true
       },
 
@@ -1756,6 +1882,7 @@ export const useGameStore = create<GameState>()(
         const price = amount * 1000
         set({ профит: профит - amount, баланс: баланс + price })
         alert(`✅ Продано ${amount} 💎 за $${price.toLocaleString()}!`)
+        await get().сохранитьПрогресс()
         return true
       },
 
@@ -1767,6 +1894,7 @@ export const useGameStore = create<GameState>()(
         if (гильдейскийИнвентарь.labSkins.includes(skinId)) { alert('❌ У вас уже есть этот скин!'); return false }
         set({ профит: профит - skin.price, гильдейскийИнвентарь: { ...гильдейскийИнвентарь, labSkins: [...гильдейскийИнвентарь.labSkins, skinId] } })
         alert(`✅ Куплен скин "${skin.name}"!`)
+        await get().сохранитьПрогресс()
         return true
       },
 
@@ -1776,6 +1904,7 @@ export const useGameStore = create<GameState>()(
         set({ гильдейскийИнвентарь: { ...гильдейскийИнвентарь, activeLabSkin: skinId } })
         const skin = LAB_SKINS.find(s => s.id === skinId)
         alert(`✅ Скин "${skin?.name}" экипирован! +${skin?.bonus}% к выходу продукта`)
+        await get().сохранитьПрогресс()
         return true
       },
 
@@ -1787,6 +1916,7 @@ export const useGameStore = create<GameState>()(
         if (гильдейскийИнвентарь.conversionBonuses.includes(bonusId)) { alert('❌ У вас уже есть этот бафф!'); return false }
         set({ профит: профит - bonus.price, гильдейскийИнвентарь: { ...гильдейскийИнвентарь, conversionBonuses: [...гильдейскийИнвентарь.conversionBonuses, bonusId] } })
         alert(`✅ Куплен бафф "${bonus.name}" (+${bonus.bonus}% к конвертации)!`)
+        await get().сохранитьПрогресс()
         return true
       },
 
@@ -1796,6 +1926,7 @@ export const useGameStore = create<GameState>()(
         set({ гильдейскийИнвентарь: { ...гильдейскийИнвентарь, activeConversionBonus: bonusId } })
         const bonus = CONVERSION_BONUSES.find(b => b.id === bonusId)
         alert(`✅ Бафф "${bonus?.name}" экипирован! +${bonus?.bonus}% к конвертации`)
+        await get().сохранитьПрогресс()
         return true
       },
 
@@ -1818,6 +1949,7 @@ export const useGameStore = create<GameState>()(
         }
         set({ профит: профит - buff.price, гильдейскийИнвентарь: { ...гильдейскийИнвентарь, temporaryBuffs: newBuffs } })
         alert(`✅ Бафф "${buff.name}" активирован на ${buff.duration} часа!`)
+        await get().сохранитьПрогресс()
         return true
       },
 
@@ -1837,6 +1969,7 @@ export const useGameStore = create<GameState>()(
         const updatedGuild = { ...гильдия, bank: гильдия.bank - price, purchasedUpgrades: updatedPurchased, chat: [...гильдия.chat, { id: Date.now().toString(), userId: 'bot', userName: '🤖 Бот', userRank: 'member', message: `🏆 Куплено улучшение "${upgrade.name}"!`, timestamp: Date.now() }] }
         set({ гильдия: updatedGuild })
         alert(`✅ Улучшение "${upgrade.name}" куплено!`)
+        await get().сохранитьПрогресс()
         return true
       },
 
@@ -1850,6 +1983,7 @@ export const useGameStore = create<GameState>()(
         const updatedGuild = { ...гильдия, activeUpgrades: { ...гильдия.activeUpgrades, [category]: upgradeId } }
         set({ гильдия: updatedGuild })
         alert(`✅ Активное улучшение изменено!`)
+        await get().сохранитьПрогресс()
         return true
       },
 
@@ -1864,6 +1998,7 @@ export const useGameStore = create<GameState>()(
         const updatedGuild = { ...гильдия, bank: гильдия.bank - base.price, chat: [...гильдия.chat, { id: Date.now().toString(), userId: 'bot', userName: '🤖 Бот', userRank: 'member', message: `🏛️ Куплена база "${base.name}"!`, timestamp: Date.now() }] }
         set({ гильдия: updatedGuild })
         alert(`✅ База "${base.name}" куплена! Теперь её можно экипировать.`)
+        await get().сохранитьПрогресс()
         return true
       },
 
@@ -1877,6 +2012,7 @@ export const useGameStore = create<GameState>()(
         const updatedGuild = { ...гильдия, base: baseId }
         set({ гильдия: updatedGuild })
         alert(`✅ База "${base.name}" экипирована! +${base.bonus}% ко всем бонусам.`)
+        await get().сохранитьПрогресс()
         return true
       },
 
@@ -1892,6 +2028,7 @@ export const useGameStore = create<GameState>()(
         const updatedGuild = { ...гильдия, alliance: guildId, chat: [...гильдия.chat, { id: Date.now().toString(), userId: 'bot', userName: '🤖 Бот', userRank: 'member', message: `🤝 Заключён альянс с гильдией "${targetGuild.name}"!`, timestamp: Date.now() }] }
         set({ гильдия: updatedGuild })
         alert(`✅ Альянс с гильдией "${targetGuild.name}" заключён!`)
+        await get().сохранитьПрогресс()
         return true
       },
 
@@ -1904,6 +2041,7 @@ export const useGameStore = create<GameState>()(
         const updatedGuild = { ...гильдия, alliance: null, chat: [...гильдия.chat, { id: Date.now().toString(), userId: 'bot', userName: '🤖 Бот', userRank: 'member', message: `💔 Альянс расторгнут!`, timestamp: Date.now() }] }
         set({ гильдия: updatedGuild })
         alert(`✅ Альянс расторгнут!`)
+        await get().сохранитьПрогресс()
         return true
       },
 
@@ -1934,6 +2072,7 @@ export const useGameStore = create<GameState>()(
         const updatedGuild = { ...гильдия, bank: newBank, bankCoins: newBankCoins, quests: updatedQuests, chat: [...гильдия.chat, { id: Date.now().toString(), userId: 'bot', userName: '🤖 Бот', userRank: 'member', message: `🎉 Квест "${questConfig.name}" выполнен! Награда:${rewardMessage}`, timestamp: Date.now() }] }
         set({ гильдия: updatedGuild })
         alert(`✅ Квест "${questConfig.name}" выполнен! Получено:${rewardMessage}`)
+        await get().сохранитьПрогресс()
         return true
       },
 
@@ -2090,6 +2229,7 @@ export const useGameStore = create<GameState>()(
         })
         
         alert(`✅ Вы вступили в гильдию "${targetGuild.name}"!`)
+        await get().сохранитьПрогресс()
         return true
       },
 
@@ -2119,23 +2259,19 @@ export const useGameStore = create<GameState>()(
           return { rewarded: false, message: "Пользователь не авторизован" }
         }
         
-        // Нельзя пригласить самого себя
         if (referrerId === userId) {
           return { rewarded: false, message: "Нельзя пригласить самого себя" }
         }
         
-        // Уже есть пригласивший
         if (рефералы.invitedBy) {
           return { rewarded: false, message: "Вы уже были приглашены кем-то" }
         }
         
-        // Проверяем, не наградили ли уже этого реферера за этого пользователя
         const key = `${referrerId}_${userId}`
         if (рефералы.rewardsClaimed[key]) {
           return { rewarded: false, message: "Награда за этого реферала уже выдана" }
         }
         
-        // Сохраняем, кто пригласил
         set({
           рефералы: {
             ...рефералы,
@@ -2144,7 +2280,6 @@ export const useGameStore = create<GameState>()(
           }
         })
         
-        // Начисляем награду пригласившему (5000 баксов + 1 осколок)
         if (typeof window !== 'undefined') {
           window.dispatchEvent(new CustomEvent('referralReward', {
             detail: {
@@ -2155,7 +2290,6 @@ export const useGameStore = create<GameState>()(
           }))
         }
         
-        // Новый пользователь тоже получает бонус (2500 баксов + 1 осколок)
         const newBalance = баланс + 2500
         const newShards = осколки + 1
         
@@ -2168,6 +2302,8 @@ export const useGameStore = create<GameState>()(
           }
         })
         
+        await get().сохранитьПрогресс()
+        
         return {
           rewarded: true,
           message: `🎉 Вы получили $2500 и 1 осколок за переход по реферальной ссылке!\nВаш друг тоже получил бонус!`
@@ -2178,7 +2314,6 @@ export const useGameStore = create<GameState>()(
         const { userId } = get()
         if (!userId) return ''
         
-        // Замени YourGameBot на имя своего бота
         const botUsername = 'YourGameBot'
         return `https://t.me/${botUsername}?start=ref_${userId}`
       },
@@ -2206,10 +2341,9 @@ export const useGameStore = create<GameState>()(
         })
         
         alert(`🎉 Вы получили $5000 и 1 осколок за приглашение друга!`)
+        await get().сохранитьПрогресс()
         return true
       },
-
-            // ========== РЕФЕРАЛЫ ==========
 
       сгенерироватьРеферальныйКод: () => {
         const { userId, реферальныйКод } = get()
@@ -2221,6 +2355,7 @@ export const useGameStore = create<GameState>()(
           result += characters.charAt(Math.floor(Math.random() * characters.length))
         }
         set({ реферальныйКод: result })
+        get().сохранитьПрогресс()
       },
 
       применитьРеферальныйКод: async (code) => {
@@ -2261,6 +2396,7 @@ export const useGameStore = create<GameState>()(
         })
         
         alert(`✅ Реферальный код применён!`)
+        await get().сохранитьПрогресс()
         return true
       },
 
@@ -2289,6 +2425,7 @@ export const useGameStore = create<GameState>()(
         })
         
         alert(`✅ Получен бонус за ${новые} приглашённых!\n💰 +$${бонус.toLocaleString()}\n💎 +${осколкиБонус} осколков`)
+        await get().сохранитьПрогресс()
         return true
       },
 
