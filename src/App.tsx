@@ -22,11 +22,9 @@ import Referral from './components/Referral'
 import AdminPanel from './components/AdminPanel'
 
 // ============================================
-// ⚠️ ТВОЙ TELEGRAM ID — ЗАМЕНИ НА СВОЙ!
-// Узнать ID можно у бота @userinfobot
+// ТВОЙ TELEGRAM ID
 // ============================================
-const ADMIN_ID = '6034090849' // ← ВСТАВЬ СВОЙ TELEGRAM ID (ТОЛЬКО ЦИФРЫ!)
-// ============================================
+const ADMIN_ID = '6034090849'
 
 const INGREDIENTS = {
   lime: 5, soda: 5, foil: 5, fertilizer: 8, soil: 10, gasoline: 15,
@@ -40,6 +38,8 @@ const INGREDIENTS = {
   acetic_anhydride: 900, mercury_chloride: 1000, safrole: 1100,
   ergotamine: 1200, p2p: 1500
 }
+
+// ... остальной код (один раз, без повторов)
 
 const DRUGS_BASE = {
   krokodil: { name: '🐊 Крокодил' },
