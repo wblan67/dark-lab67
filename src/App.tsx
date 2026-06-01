@@ -25,7 +25,7 @@ import AdminPanel from './components/AdminPanel'
 // ⚠️ ТВОЙ TELEGRAM ID — ЗАМЕНИ НА СВОЙ!
 // Узнать ID можно у бота @userinfobot
 // ============================================
-const ADMIN_ID = '123456789' // ← ВСТАВЬ СВОЙ TELEGRAM ID (ТОЛЬКО ЦИФРЫ!)
+const ADMIN_ID = '6034090849' // ← ВСТАВЬ СВОЙ TELEGRAM ID (ТОЛЬКО ЦИФРЫ!)
 // ============================================
 
 const INGREDIENTS = {
