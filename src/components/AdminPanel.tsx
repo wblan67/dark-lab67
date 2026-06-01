@@ -33,8 +33,8 @@ export default function AdminPanel() {
   const [logMessage, setLogMessage] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
   
-  // Проверка, что это ты (по Telegram ID) - ВРЕМЕННО ОТКЛЮЧЕНО
-  const isAdmin = true  // ← ВРЕМЕННО ВСЕГДА TRUE
+  // Проверка пропускает всех (только пароль)
+  const isAdmin = true
   
   // Загрузка забаненных из localStorage
   useEffect(() => {
@@ -203,7 +203,10 @@ export default function AdminPanel() {
             Выйти
           </button>
         </div>
-        <p className="text-xs text-red-300 mt-1">Добро пожаловать, Администратор! Твой ID: {userId}</p>
+        {/* Показываем ТВОЙ ID принудительно, даже если gameStore вернул test_user_123 */}
+        <p className="text-xs text-red-300 mt-1">
+          Добро пожаловать, Администратор! Твой ID: {ADMIN_ID}
+        </p>
       </div>
       
       {/* Табы */}
