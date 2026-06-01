@@ -3,28 +3,33 @@ import { useState, useEffect } from 'react'
 import { useGameStore } from '../store/gameStore'
 
 // ============================================
-// ⚠️ ТОЛЬКО ДЛЯ ТЕБЯ! НЕ МЕНЯЙ ЭТИ ID
+// ТОЛЬКО ДЛЯ ТЕБЯ! НЕ МЕНЯЙ ЭТИ ID
 // ============================================
 // Telegram ID Администратора (замени на свой!)
-const ADMIN_ID = '6034090849'  // 👈 ВСТАВЬ СВОЙ ID!
+const ADMIN_ID = '6034090849'
 
 // Пароль для входа в админ-панель
 const ADMIN_PASSWORD = 'uuuuuioo67'
-// ============================================
 
 export default function AdminPanel() {
-  const { userId, баланс, уровень, осколки, статистика } = useGameStore()
+  // ПРАВИЛЬНО: получаем данные из gameStore
+  const userId = useGameStore((state) => state.userId)
+  const баланс = useGameStore((state) => state.баланс)
+  const уровень = useGameStore((state) => state.уровень)
+  const осколки = useGameStore((state) => state.осколки)
+  const статистика = useGameStore((state) => state.статистика)
+
   const [password, setPassword] = useState('')
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [activeTab, setActiveTab] = useState('users')
-  
+
   // Данные для админки
   const [targetUserId, setTargetUserId] = useState('')
   const [shardsAmount, setShardsAmount] = useState(100)
   const [expAmount, setExpAmount] = useState(1000)
   const [moneyAmount, setMoneyAmount] = useState(10000)
   const [banReason, setBanReason] = useState('')
-  const [bannedUsers, setBannedUsers] = useState<Record<string, { reason: string, date: string }>>({})
+  const [bannedUsers, setBannedUsers] = useState({})
   const [logMessage, setLogMessage] = useState('')
   
   // Проверка, что это ты (по Telegram ID)
