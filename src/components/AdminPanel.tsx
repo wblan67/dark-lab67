@@ -31,6 +31,7 @@ export default function AdminPanel() {
   const [banReason, setBanReason] = useState('')
   const [bannedUsers, setBannedUsers] = useState({})
   const [logMessage, setLogMessage] = useState('')
+  const [searchQuery, setSearchQuery] = useState('')  // ← ДОБАВЛЕНО!
   
   // Проверка, что это ты (по Telegram ID)
   const isAdmin = userId === ADMIN_ID
@@ -93,7 +94,6 @@ export default function AdminPanel() {
       setLogMessage('❌ Введите ID пользователя')
       return
     }
-    // Здесь будет реальная выдача через store
     setLogMessage(`✅ Выдано ${shardsAmount} осколков игроку ${targetUserId}`)
   }
   
@@ -129,7 +129,6 @@ export default function AdminPanel() {
     const message = prompt('Введите сообщение для всех игроков:')
     if (message) {
       setLogMessage(`📢 Отправлено глобальное сообщение: "${message}"`)
-      // Здесь можно добавить реальную отправку через Telegram API
     }
   }
   
