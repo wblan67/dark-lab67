@@ -64,7 +64,7 @@ const CARS_LIST = [
   { id: 'helicopter', name: '🚁 Вертолёт', time: 3, capacity: 350 },
   { id: 'plane', name: '✈️ Самолёт', time: 2, capacity: 500 },
   { id: 'secret', name: '🛸 Секретная', time: 1, capacity: 1000 }
-]
+}
 
 const НАЗВАНИЯ_АЧИВОК: Record<string, string> = {
   'welcome': '🏠 Добро пожаловать',
@@ -108,11 +108,7 @@ const НАЗВАНИЯ_АЧИВОК: Record<string, string> = {
 }
 
 function App() {
-  // ========== ДОБАВЛЕНО: ПОЛУЧЕНИЕ ДАННЫХ ИЗ TELEGRAM ==========
   const [telegramUser, setTelegramUser] = useState<any>(null)
-  // ========== КОНЕЦ ДОБАВЛЕННОГО ==========
-  
-  // ДОБАВЛЕН ТИП 'admin' В КОНЕЦ СПИСКА
   const [активнаяВкладка, установитьВкладку] = useState<'shop' | 'inventory' | 'craft' | 'equipment' | 'fusion' | 'cars' | 'business' | 'profile' | 'leaderboard' | 'casino' | 'boxes' | 'shardShop' | 'repair' | 'tuning' | 'daily' | 'guild' | 'createGuild' | 'referral' | 'admin'>('shop')
   const [уведомление, setУведомление] = useState<{ id: string; награда: number } | null>(null)
   
@@ -131,6 +127,14 @@ function App() {
   const текущиеЦены = useGameStore((state) => state.текущиеЦены)
   const следующееОбновлениеЦен = useGameStore((state) => state.следующееОбновлениеЦен)
   const запланироватьОбновлениеЦен = useGameStore((state) => state.запланироватьОбновлениеЦен)
+  
+  // Сохраняем реальный ID в localStorage при его изменении
+  useEffect(() => {
+    if (userId && userId !== 'test_user_123') {
+      localStorage.setItem('telegram_id', userId)
+      console.log('💾 Сохранён реальный ID в localStorage:', userId)
+    }
+  }, [userId])
   
   useEffect(() => {
     const interval = setInterval(() => {
@@ -184,16 +188,32 @@ function App() {
   // ========== ПОЛУЧЕНИЕ ДАННЫХ ПОЛЬЗОВАТЕЛЯ TELEGRAM ==========
   useEffect(() => {
     const tg = (window as any).Telegram?.WebApp
+    console.log('🔍 Telegram WebApp объект:', tg ? 'Есть' : 'Нет')
+    
     if (tg && tg.initDataUnsafe?.user) {
       const user = tg.initDataUnsafe.user
+      console.log('👤 Пользователь из Telegram:', user)
+      console.log('🆔 Telegram ID:', user.id)
       setTelegramUser(user)
       if (user.id) {
-        загрузитьПользователя(String(user.id))
+        const tgId = String(user.id)
+        console.log('✅ Сохраняем Telegram ID:', tgId)
+        загрузитьПользователя(tgId)
+        localStorage.setItem('telegram_id', tgId)
       }
       tg.ready()
       tg.expand()
     } else {
-      загрузитьПользователя('test_user_123')
+      // Пробуем загрузить ID из localStorage
+      const savedId = localStorage.getItem('telegram_id')
+      console.log('📦 ID из localStorage:', savedId)
+      if (savedId && savedId !== 'test_user_123') {
+        console.log('✅ Восстанавливаем ID из localStorage:', savedId)
+        загрузитьПользователя(savedId)
+      } else {
+        console.log('⚠️ Нет данных, используем test_user_123')
+        загрузитьПользователя('test_user_123')
+      }
     }
   }, [])
   // ========== КОНЕЦ ==========
@@ -235,7 +255,6 @@ function App() {
         }
       `}</style>
       
-      {/* ========== ШАПКА С АВАТАРОЙ И ИМЕНЕМ ИЗ TELEGRAM ========== */}
       {telegramUser && (
         <div className="bg-gradient-to-r from-gray-800 to-gray-900 p-3 flex items-center gap-3 border-b border-gray-700 sticky top-0 z-20">
           {telegramUser.photo_url && (
@@ -259,7 +278,6 @@ function App() {
           </div>
         </div>
       )}
-      {/* ========== КОНЕЦ ШАПКИ ========== */}
       
       <div className="bg-gray-800 p-4 sticky top-0 z-10">
         <div className="flex justify-between items-center">
@@ -393,7 +411,6 @@ function App() {
         <button onClick={() => установитьВкладку('boxes')} className={`flex-1 py-3 font-semibold text-sm whitespace-nowrap transition ${активнаяВкладка === 'boxes' ? 'text-green-400 border-b-2 border-green-400' : 'text-gray-400 hover:text-white'}`}>📦 Боксы</button>
         <button onClick={() => установитьВкладку('shardShop')} className={`flex-1 py-3 font-semibold text-sm whitespace-nowrap transition ${активнаяВкладка === 'shardShop' ? 'text-green-400 border-b-2 border-green-400' : 'text-gray-400 hover:text-white'}`}>💎 Магазин</button>
         
-        {/* Кнопка админ-панели — ВРЕМЕННО ВИДНА ВСЕМ (для теста) */}
         <button onClick={() => установитьВкладку('admin')} className={`flex-1 py-3 font-semibold text-sm whitespace-nowrap transition ${активнаяВкладка === 'admin' ? 'text-red-400 border-b-2 border-red-400' : 'text-gray-400 hover:text-white'}`}>👑 Админ</button>
       </div>
       
@@ -429,7 +446,6 @@ function App() {
       {активнаяВкладка === 'boxes' && <Boxes />}
       {активнаяВкладка === 'shardShop' && <ShardShop />}
       
-      {/* Рендер админ-панели */}
       {активнаяВкладка === 'admin' && <AdminPanel />}
       
       <GuildInvites />
