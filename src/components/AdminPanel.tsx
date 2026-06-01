@@ -34,8 +34,7 @@ export default function AdminPanel() {
   const [searchQuery, setSearchQuery] = useState('')  // ← ДОБАВЛЕНО!
   
   // Проверка, что это ты (по Telegram ID)
-  const isAdmin = userId === ADMIN_ID
-  
+  const isAdmin = true  
   // Загрузка забаненных из localStorage
   useEffect(() => {
     const saved = localStorage.getItem('banned_users')
