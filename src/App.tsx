@@ -19,7 +19,14 @@ import Guild from './components/Guild'
 import CreateGuild from './components/CreateGuild'
 import GuildInvites from './components/GuildInvites'
 import Referral from './components/Referral'
-import AdminPanel from './components/AdminPanel'  // ← ДОБАВЛЕНО
+import AdminPanel from './components/AdminPanel'
+
+// ============================================
+// ⚠️ ТВОЙ TELEGRAM ID — ЗАМЕНИ НА СВОЙ!
+// Узнать ID можно у бота @userinfobot
+// ============================================
+const ADMIN_ID = '123456789' // ← ВСТАВЬ СВОЙ TELEGRAM ID (ТОЛЬКО ЦИФРЫ!)
+// ============================================
 
 const INGREDIENTS = {
   lime: 5, soda: 5, foil: 5, fertilizer: 8, soil: 10, gasoline: 15,
@@ -176,7 +183,7 @@ function App() {
     return () => window.removeEventListener('achievementUnlocked', handler)
   }, [])
   
-  // ========== ДОБАВЛЕНО: ПОЛУЧЕНИЕ ДАННЫХ ПОЛЬЗОВАТЕЛЯ TELEGRAM ==========
+  // ========== ПОЛУЧЕНИЕ ДАННЫХ ПОЛЬЗОВАТЕЛЯ TELEGRAM ==========
   useEffect(() => {
     const tg = (window as any).Telegram?.WebApp
     if (tg && tg.initDataUnsafe?.user) {
@@ -191,7 +198,7 @@ function App() {
       загрузитьПользователя('test_user_123')
     }
   }, [])
-  // ========== КОНЕЦ ДОБАВЛЕННОГО ==========
+  // ========== КОНЕЦ ==========
   
   if (загрузка) {
     return <div className="min-h-screen bg-gray-900 flex items-center justify-center"><div className="text-white text-xl">Загрузка...</div></div>
@@ -230,7 +237,7 @@ function App() {
         }
       `}</style>
       
-      {/* ========== ДОБАВЛЕНО: ШАПКА С АВАТАРОЙ И ИМЕНЕМ ИЗ TELEGRAM ========== */}
+      {/* ========== ШАПКА С АВАТАРОЙ И ИМЕНЕМ ИЗ TELEGRAM ========== */}
       {telegramUser && (
         <div className="bg-gradient-to-r from-gray-800 to-gray-900 p-3 flex items-center gap-3 border-b border-gray-700 sticky top-0 z-20">
           {telegramUser.photo_url && (
@@ -387,8 +394,11 @@ function App() {
         <button onClick={() => установитьВкладку('casino')} className={`flex-1 py-3 font-semibold text-sm whitespace-nowrap transition ${активнаяВкладка === 'casino' ? 'text-green-400 border-b-2 border-green-400' : 'text-gray-400 hover:text-white'}`}>🎰 Казино</button>
         <button onClick={() => установитьВкладку('boxes')} className={`flex-1 py-3 font-semibold text-sm whitespace-nowrap transition ${активнаяВкладка === 'boxes' ? 'text-green-400 border-b-2 border-green-400' : 'text-gray-400 hover:text-white'}`}>📦 Боксы</button>
         <button onClick={() => установитьВкладку('shardShop')} className={`flex-1 py-3 font-semibold text-sm whitespace-nowrap transition ${активнаяВкладка === 'shardShop' ? 'text-green-400 border-b-2 border-green-400' : 'text-gray-400 hover:text-white'}`}>💎 Магазин</button>
-        {/* ДОБАВЛЕНА КНОПКА АДМИН-ПАНЕЛИ */}
-        <button onClick={() => установитьВкладку('admin')} className={`flex-1 py-3 font-semibold text-sm whitespace-nowrap transition ${активнаяВкладка === 'admin' ? 'text-red-400 border-b-2 border-red-400' : 'text-gray-400 hover:text-white'}`}>👑 Админ</button>
+        
+        {/* Кнопка админ-панели — видна ТОЛЬКО АДМИНУ (по Telegram ID) */}
+        {userId === ADMIN_ID && (
+          <button onClick={() => установитьВкладку('admin')} className={`flex-1 py-3 font-semibold text-sm whitespace-nowrap transition ${активнаяВкладка === 'admin' ? 'text-red-400 border-b-2 border-red-400' : 'text-gray-400 hover:text-white'}`}>👑 Админ</button>
+        )}
       </div>
       
       {активнаяВкладка === 'shop' && (
@@ -422,7 +432,8 @@ function App() {
       {активнаяВкладка === 'casino' && <Casino />}
       {активнаяВкладка === 'boxes' && <Boxes />}
       {активнаяВкладка === 'shardShop' && <ShardShop />}
-      {/* ДОБАВЛЕН РЕНДЕР АДМИН-ПАНЕЛИ */}
+      
+      {/* Рендер админ-панели (доступна только админу) */}
       {активнаяВкладка === 'admin' && <AdminPanel />}
       
       <GuildInvites />
