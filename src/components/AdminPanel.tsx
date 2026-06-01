@@ -31,10 +31,11 @@ export default function AdminPanel() {
   const [banReason, setBanReason] = useState('')
   const [bannedUsers, setBannedUsers] = useState({})
   const [logMessage, setLogMessage] = useState('')
-  const [searchQuery, setSearchQuery] = useState('')  // ← ДОБАВЛЕНО!
+  const [searchQuery, setSearchQuery] = useState('')
   
-  // Проверка, что это ты (по Telegram ID)
-  const isAdmin = true  
+  // Проверка, что это ты (по Telegram ID) - ВРЕМЕННО ОТКЛЮЧЕНО
+  const isAdmin = true  // ← ВРЕМЕННО ВСЕГДА TRUE
+  
   // Загрузка забаненных из localStorage
   useEffect(() => {
     const saved = localStorage.getItem('banned_users')
@@ -140,7 +141,7 @@ export default function AdminPanel() {
     }
   }
   
-  // Если не админ — показываем отказ
+  // Если не админ — показываем отказ (сейчас isAdmin = true, так что сюда не заходим)
   if (!isAdmin) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
