@@ -19,6 +19,7 @@ import Guild from './components/Guild'
 import CreateGuild from './components/CreateGuild'
 import GuildInvites from './components/GuildInvites'
 import Referral from './components/Referral'
+import AdminPanel from './components/AdminPanel'  // ← ДОБАВЛЕНО
 
 const INGREDIENTS = {
   lime: 5, soda: 5, foil: 5, fertilizer: 8, soil: 10, gasoline: 15,
@@ -106,7 +107,8 @@ function App() {
   const [telegramUser, setTelegramUser] = useState<any>(null)
   // ========== КОНЕЦ ДОБАВЛЕННОГО ==========
   
-  const [активнаяВкладка, установитьВкладку] = useState<'shop' | 'inventory' | 'craft' | 'equipment' | 'fusion' | 'cars' | 'business' | 'profile' | 'leaderboard' | 'casino' | 'boxes' | 'shardShop' | 'repair' | 'tuning' | 'daily' | 'guild' | 'createGuild' | 'referral'>('shop')
+  // ДОБАВЛЕН ТИП 'admin' В КОНЕЦ СПИСКА
+  const [активнаяВкладка, установитьВкладку] = useState<'shop' | 'inventory' | 'craft' | 'equipment' | 'fusion' | 'cars' | 'business' | 'profile' | 'leaderboard' | 'casino' | 'boxes' | 'shardShop' | 'repair' | 'tuning' | 'daily' | 'guild' | 'createGuild' | 'referral' | 'admin'>('shop')
   const [уведомление, setУведомление] = useState<{ id: string; награда: number } | null>(null)
   
   const userId = useGameStore((state) => state.userId)
@@ -385,6 +387,8 @@ function App() {
         <button onClick={() => установитьВкладку('casino')} className={`flex-1 py-3 font-semibold text-sm whitespace-nowrap transition ${активнаяВкладка === 'casino' ? 'text-green-400 border-b-2 border-green-400' : 'text-gray-400 hover:text-white'}`}>🎰 Казино</button>
         <button onClick={() => установитьВкладку('boxes')} className={`flex-1 py-3 font-semibold text-sm whitespace-nowrap transition ${активнаяВкладка === 'boxes' ? 'text-green-400 border-b-2 border-green-400' : 'text-gray-400 hover:text-white'}`}>📦 Боксы</button>
         <button onClick={() => установитьВкладку('shardShop')} className={`flex-1 py-3 font-semibold text-sm whitespace-nowrap transition ${активнаяВкладка === 'shardShop' ? 'text-green-400 border-b-2 border-green-400' : 'text-gray-400 hover:text-white'}`}>💎 Магазин</button>
+        {/* ДОБАВЛЕНА КНОПКА АДМИН-ПАНЕЛИ */}
+        <button onClick={() => установитьВкладку('admin')} className={`flex-1 py-3 font-semibold text-sm whitespace-nowrap transition ${активнаяВкладка === 'admin' ? 'text-red-400 border-b-2 border-red-400' : 'text-gray-400 hover:text-white'}`}>👑 Админ</button>
       </div>
       
       {активнаяВкладка === 'shop' && (
@@ -418,6 +422,8 @@ function App() {
       {активнаяВкладка === 'casino' && <Casino />}
       {активнаяВкладка === 'boxes' && <Boxes />}
       {активнаяВкладка === 'shardShop' && <ShardShop />}
+      {/* ДОБАВЛЕН РЕНДЕР АДМИН-ПАНЕЛИ */}
+      {активнаяВкладка === 'admin' && <AdminPanel />}
       
       <GuildInvites />
       
