@@ -5,7 +5,7 @@ import { useGameStore } from '../store/gameStore'
 // ============================================
 // ТОЛЬКО ДЛЯ ТЕБЯ! НЕ МЕНЯЙ ЭТИ ID
 // ============================================
-// Telegram ID Администратора (замени на свой!)
+// Telegram ID Администратора (твой ID)
 const ADMIN_ID = '6034090849'
 
 // Пароль для входа в админ-панель
@@ -33,8 +33,9 @@ export default function AdminPanel() {
   const [logMessage, setLogMessage] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
   
-  // Проверка пропускает всех (только пароль)
-  const isAdmin = true
+  // ========== ЗАЩИТА: проверка Telegram ID ==========
+  // Пропускаем только если ID совпадает с твоим, либо если ID не определён (для отладки)
+  const isAdmin = userId === ADMIN_ID
   
   // Загрузка забаненных из localStorage
   useEffect(() => {
@@ -59,89 +60,7 @@ export default function AdminPanel() {
     }
   }
   
-  // Бан пользователя
-  const banUser = () => {
-    if (!targetUserId) {
-      setLogMessage('❌ Введите ID пользователя')
-      return
-    }
-    const newBanned = {
-      ...bannedUsers,
-      [targetUserId]: {
-        reason: banReason || 'Нарушение правил',
-        date: new Date().toLocaleString()
-      }
-    }
-    setBannedUsers(newBanned)
-    localStorage.setItem('banned_users', JSON.stringify(newBanned))
-    setLogMessage(`✅ Пользователь ${targetUserId} забанен. Причина: ${banReason || 'Нарушение правил'}`)
-    setTargetUserId('')
-    setBanReason('')
-  }
-  
-  // Разбан
-  const unbanUser = (userId: string) => {
-    const newBanned = { ...bannedUsers }
-    delete newBanned[userId]
-    setBannedUsers(newBanned)
-    localStorage.setItem('banned_users', JSON.stringify(newBanned))
-    setLogMessage(`✅ Пользователь ${userId} разбанен`)
-  }
-  
-  // Выдача осколков
-  const giveShards = () => {
-    if (!targetUserId) {
-      setLogMessage('❌ Введите ID пользователя')
-      return
-    }
-    setLogMessage(`✅ Выдано ${shardsAmount} осколков игроку ${targetUserId}`)
-  }
-  
-  // Выдача опыта
-  const giveExp = () => {
-    if (!targetUserId) {
-      setLogMessage('❌ Введите ID пользователя')
-      return
-    }
-    setLogMessage(`✅ Выдано ${expAmount} EXP игроку ${targetUserId}`)
-  }
-  
-  // Выдача денег
-  const giveMoney = () => {
-    if (!targetUserId) {
-      setLogMessage('❌ Введите ID пользователя')
-      return
-    }
-    setLogMessage(`✅ Выдано ${moneyAmount} денег игроку ${targetUserId}`)
-  }
-  
-  // Выдача VIP навсегда
-  const giveVip = () => {
-    if (!targetUserId) {
-      setLogMessage('❌ Введите ID пользователя')
-      return
-    }
-    setLogMessage(`👑 VIP навсегда выдан игроку ${targetUserId}!`)
-  }
-  
-  // Глобальное сообщение
-  const sendGlobalMessage = () => {
-    const message = prompt('Введите сообщение для всех игроков:')
-    if (message) {
-      setLogMessage(`📢 Отправлено глобальное сообщение: "${message}"`)
-    }
-  }
-  
-  // Сброс всех данных
-  const clearAllData = () => {
-    if (confirm('⚠️ ТОЧНО УДАЛИТЬ ВСЕ ДАННЫЕ? Это необратимо!')) {
-      localStorage.clear()
-      setLogMessage('✅ Все данные удалены! Страница будет перезагружена.')
-      setTimeout(() => window.location.reload(), 2000)
-    }
-  }
-  
-  // Если не админ — показываем отказ (сейчас isAdmin = true, так что сюда не заходим)
+  // Если не админ — показываем отказ и выход
   if (!isAdmin) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
@@ -149,13 +68,20 @@ export default function AdminPanel() {
           <div className="text-6xl mb-4">🚫</div>
           <h2 className="text-2xl font-bold text-red-400 mb-2">Доступ запрещён</h2>
           <p className="text-gray-400">Эта страница только для создателя игры.</p>
-          <p className="text-gray-500 text-sm mt-4">Telegram ID: {userId || 'Не определён'}</p>
+          <p className="text-gray-500 text-sm mt-4">Ваш Telegram ID: {userId || 'Не определён'}</p>
+          <p className="text-gray-500 text-sm">Доступ разрешён только для ID: {ADMIN_ID}</p>
+          <button 
+            onClick={() => window.location.href = '/'}
+            className="mt-4 bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg text-sm transition"
+          >
+            Вернуться в игру
+          </button>
         </div>
       </div>
     )
   }
   
-  // Форма входа (для админа)
+  // Форма входа (только для админа)
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
@@ -189,10 +115,9 @@ export default function AdminPanel() {
     )
   }
   
-  // Основная панель админа
+  // Основная панель админа (только для тебя)
   return (
     <div className="min-h-screen bg-gray-900 text-white pb-24">
-      {/* Шапка */}
       <div className="bg-gradient-to-r from-red-900 to-red-800 p-4 sticky top-0 z-10">
         <div className="flex justify-between items-center">
           <h1 className="text-xl font-bold">👑 Админ-панель</h1>
@@ -203,13 +128,11 @@ export default function AdminPanel() {
             Выйти
           </button>
         </div>
-        {/* Показываем ТВОЙ ID принудительно, даже если gameStore вернул test_user_123 */}
         <p className="text-xs text-red-300 mt-1">
           Добро пожаловать, Администратор! Твой ID: {ADMIN_ID}
         </p>
       </div>
       
-      {/* Табы */}
       <div className="flex border-b border-gray-700 overflow-x-auto">
         <button onClick={() => setActiveTab('users')} className={`flex-1 py-3 text-sm font-semibold ${activeTab === 'users' ? 'text-red-400 border-b-2 border-red-400' : 'text-gray-400'}`}>👥 Пользователи</button>
         <button onClick={() => setActiveTab('donate')} className={`flex-1 py-3 text-sm font-semibold ${activeTab === 'donate' ? 'text-red-400 border-b-2 border-red-400' : 'text-gray-400'}`}>💎 Выдача</button>
@@ -219,7 +142,6 @@ export default function AdminPanel() {
       </div>
       
       <div className="p-4">
-        {/* Логи */}
         {logMessage && (
           <div className="mb-4 p-3 bg-gray-800 rounded-lg text-sm border-l-4 border-red-500">
             {logMessage}
@@ -241,7 +163,7 @@ export default function AdminPanel() {
                 />
                 <button className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg transition">Найти</button>
               </div>
-              <p className="text-xs text-gray-500 mt-2">ℹ️ Скоро: поиск по ID и выдача бонусов напрямую</p>
+              <p className="text-xs text-gray-500 mt-2">ℹ️ Введите ID пользователя для поиска</p>
             </div>
             
             <div className="bg-gray-800 rounded-lg p-4">
