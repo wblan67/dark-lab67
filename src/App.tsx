@@ -102,6 +102,10 @@ const НАЗВАНИЯ_АЧИВОК: Record<string, string> = {
 }
 
 function App() {
+  // ========== ДОБАВЛЕНО: ПОЛУЧЕНИЕ ДАННЫХ ИЗ TELEGRAM ==========
+  const [telegramUser, setTelegramUser] = useState<any>(null)
+  // ========== КОНЕЦ ДОБАВЛЕННОГО ==========
+  
   const [активнаяВкладка, установитьВкладку] = useState<'shop' | 'inventory' | 'craft' | 'equipment' | 'fusion' | 'cars' | 'business' | 'profile' | 'leaderboard' | 'casino' | 'boxes' | 'shardShop' | 'repair' | 'tuning' | 'daily' | 'guild' | 'createGuild' | 'referral'>('shop')
   const [уведомление, setУведомление] = useState<{ id: string; награда: number } | null>(null)
   
@@ -170,16 +174,22 @@ function App() {
     return () => window.removeEventListener('achievementUnlocked', handler)
   }, [])
   
+  // ========== ДОБАВЛЕНО: ПОЛУЧЕНИЕ ДАННЫХ ПОЛЬЗОВАТЕЛЯ TELEGRAM ==========
   useEffect(() => {
     const tg = (window as any).Telegram?.WebApp
-    if (tg?.initDataUnsafe?.user) {
-      загрузитьПользователя(String(tg.initDataUnsafe.user.id))
+    if (tg && tg.initDataUnsafe?.user) {
+      const user = tg.initDataUnsafe.user
+      setTelegramUser(user)
+      if (user.id) {
+        загрузитьПользователя(String(user.id))
+      }
       tg.ready()
       tg.expand()
     } else {
       загрузитьПользователя('test_user_123')
     }
   }, [])
+  // ========== КОНЕЦ ДОБАВЛЕННОГО ==========
   
   if (загрузка) {
     return <div className="min-h-screen bg-gray-900 flex items-center justify-center"><div className="text-white text-xl">Загрузка...</div></div>
@@ -217,6 +227,32 @@ function App() {
           100% { transform: translateY(0); opacity: 1; }
         }
       `}</style>
+      
+      {/* ========== ДОБАВЛЕНО: ШАПКА С АВАТАРОЙ И ИМЕНЕМ ИЗ TELEGRAM ========== */}
+      {telegramUser && (
+        <div className="bg-gradient-to-r from-gray-800 to-gray-900 p-3 flex items-center gap-3 border-b border-gray-700 sticky top-0 z-20">
+          {telegramUser.photo_url && (
+            <img 
+              src={telegramUser.photo_url} 
+              alt="avatar" 
+              className="w-12 h-12 rounded-full border-2 border-green-500"
+            />
+          )}
+          <div className="flex-1">
+            <div className="font-bold text-white">
+              {telegramUser.first_name} {telegramUser.last_name || ''}
+            </div>
+            <div className="text-xs text-gray-400">
+              @{telegramUser.username || 'no username'}
+            </div>
+          </div>
+          <div className="text-right">
+            <div className="text-xs text-gray-400">Telegram ID</div>
+            <div className="text-sm font-mono text-gray-300">{userId?.slice(-8) || '—'}</div>
+          </div>
+        </div>
+      )}
+      {/* ========== КОНЕЦ ШАПКИ ========== */}
       
       <div className="bg-gray-800 p-4 sticky top-0 z-10">
         <div className="flex justify-between items-center">
