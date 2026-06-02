@@ -224,45 +224,35 @@ function App() {
         }
       `}</style>
       
-      {/* Шапка с большой аватаркой 128px как в Telegram */}
-      <div className="bg-gradient-to-r from-gray-800 to-gray-900 p-3 flex items-center gap-4 border-b border-gray-700 sticky top-0 z-20">
+      {/* Шапка с аватаркой 12x12px, круглая, компактная */}
+      <div className="bg-gradient-to-r from-gray-800 to-gray-900 px-2 py-0.5 flex items-center gap-1.5 border-b border-gray-700 sticky top-0 z-20">
         {telegramUser?.photo_url ? (
-          <img 
-            src={telegramUser.photo_url} 
-            alt="avatar" 
-            className="w-32 h-32 rounded-full border-4 border-green-500 flex-shrink-0"
-          />
+          <div className="w-3 h-3 rounded-full overflow-hidden border border-green-500 flex-shrink-0">
+            <img 
+              src={telegramUser.photo_url} 
+              alt="avatar" 
+              className="w-full h-full object-cover"
+            />
+          </div>
         ) : (
-          <div className="w-32 h-32 rounded-full bg-red-700 flex items-center justify-center text-5xl border-4 border-red-500 flex-shrink-0">
+          <div className="w-3 h-3 rounded-full bg-red-700 flex items-center justify-center text-[4px] border border-red-500 flex-shrink-0">
             👑
           </div>
         )}
         
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           {telegramUser ? (
-            <>
-              <div className="font-bold text-xl text-white">
-                {telegramUser.first_name} {telegramUser.last_name || ''}
-              </div>
-              <div className="text-sm text-gray-400">
-                @{telegramUser.username || 'no username'}
-              </div>
-              <div className="text-xs text-gray-500 mt-1">
-                ID: {userId || '—'}
-              </div>
-            </>
+            <div className="text-[9px] text-white truncate">
+              <span className="font-medium">{telegramUser.first_name?.slice(0, 12)}</span>
+              <span className="text-gray-400 ml-0.5">@{telegramUser.username?.slice(0, 10) || ''}</span>
+              <span className="text-gray-500 ml-0.5">• {userId?.slice(-4) || '—'}</span>
+            </div>
           ) : (
-            <>
-              <div className="font-bold text-xl text-red-300">
-                Администратор
-              </div>
-              <div className="text-sm text-red-400">
-                Режим разработчика
-              </div>
-              <div className="text-xs text-red-500 mt-1">
-                ID: {ADMIN_ID}
-              </div>
-            </>
+            <div className="text-[9px] text-white truncate">
+              <span className="font-medium text-red-300">Админ</span>
+              <span className="text-red-400 ml-0.5">@{ADMIN_ID.slice(-8)}</span>
+              <span className="text-red-500 ml-0.5">• {ADMIN_ID.slice(-4)}</span>
+            </div>
           )}
         </div>
       </div>
