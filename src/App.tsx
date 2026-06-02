@@ -224,20 +224,20 @@ function App() {
         }
       `}</style>
       
-      {/* Шапка без аватарки — только текст */}
-      <div className="bg-gradient-to-r from-gray-800 to-gray-900 px-2 py-0.5 flex items-center gap-1.5 border-b border-gray-700 sticky top-0 z-20">
+      {/* Шапка без аватарки — имя (15), юзернейм (15), полный ID */}
+      <div className="bg-gradient-to-r from-gray-800 to-gray-900 px-2 py-0.5 flex items-center gap-1 border-b border-gray-700 sticky top-0 z-20">
         <div className="flex-1 min-w-0">
           {telegramUser ? (
             <div className="text-[9px] text-white truncate">
               <span className="font-medium">{telegramUser.first_name?.slice(0, 15)}</span>
-              <span className="text-gray-400 ml-0.5">@{telegramUser.username?.slice(0, 12) || ''}</span>
-              <span className="text-gray-500 ml-0.5">• {userId?.slice(-4) || '—'}</span>
+              <span className="text-gray-400 ml-0.5">@{telegramUser.username?.slice(0, 15) || ''}</span>
+              <span className="text-gray-500 ml-0.5">• {userId || '—'}</span>
             </div>
           ) : (
             <div className="text-[9px] text-white truncate">
               <span className="font-medium text-red-300">Админ</span>
-              <span className="text-red-400 ml-0.5">@{ADMIN_ID.slice(-8)}</span>
-              <span className="text-red-500 ml-0.5">• {ADMIN_ID.slice(-4)}</span>
+              <span className="text-red-400 ml-0.5">@{ADMIN_ID.slice(0, 15)}</span>
+              <span className="text-red-500 ml-0.5">• {ADMIN_ID}</span>
             </div>
           )}
         </div>
