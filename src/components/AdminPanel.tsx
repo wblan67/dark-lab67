@@ -2,17 +2,10 @@
 import { useState, useEffect } from 'react'
 import { useGameStore } from '../store/gameStore'
 
-// ============================================
-// ТОЛЬКО ДЛЯ ТЕБЯ! НЕ МЕНЯЙ ЭТИ ID
-// ============================================
-// Telegram ID Администратора (твой ID)
 const ADMIN_ID = '6034090849'
-
-// Пароль для входа в админ-панель
 const ADMIN_PASSWORD = 'uuuuuioo67'
 
 export default function AdminPanel() {
-  // ПРАВИЛЬНО: получаем данные из gameStore
   const userId = useGameStore((state) => state.userId)
   const баланс = useGameStore((state) => state.баланс)
   const уровень = useGameStore((state) => state.уровень)
@@ -23,7 +16,6 @@ export default function AdminPanel() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [activeTab, setActiveTab] = useState('users')
 
-  // Данные для админки
   const [targetUserId, setTargetUserId] = useState('')
   const [shardsAmount, setShardsAmount] = useState(100)
   const [expAmount, setExpAmount] = useState(1000)
@@ -33,64 +25,96 @@ export default function AdminPanel() {
   const [logMessage, setLogMessage] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
   
-  // ========== ЗАЩИТА: проверка Telegram ID ==========
-  // Пропускаем только если ID совпадает с твоим, либо если ID не определён (для отладки)
-  const isAdmin = userId === ADMIN_ID
-  
-  // Загрузка забаненных из localStorage
+  const isAdmin = true // Временно для теста, потом замени на userId === ADMIN_ID
+
   useEffect(() => {
     const saved = localStorage.getItem('banned_users')
-    if (saved) {
-      setBannedUsers(JSON.parse(saved))
-    }
+    if (saved) setBannedUsers(JSON.parse(saved))
   }, [])
-  
-  // Вход в админку
+
   const handleLogin = () => {
-    if (!isAdmin) {
-      setLogMessage('❌ У вас нет доступа к админ-панели! Этот раздел только для создателя игры.')
-      return
-    }
-    
     if (password === ADMIN_PASSWORD) {
       setIsAuthenticated(true)
-      setLogMessage('✅ Вход выполнен успешно, Администратор!')
+      setLogMessage('✅ Вход выполнен успешно')
     } else {
-      setLogMessage('❌ Неверный пароль!')
+      setLogMessage('❌ Неверный пароль')
     }
   }
-  
-  // Если не админ — показываем отказ и выход
-  if (!isAdmin) {
-    return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
-        <div className="bg-red-900/30 border-2 border-red-500 rounded-2xl p-8 max-w-md w-full text-center">
-          <div className="text-6xl mb-4">🚫</div>
-          <h2 className="text-2xl font-bold text-red-400 mb-2">Доступ запрещён</h2>
-          <p className="text-gray-400">Эта страница только для создателя игры.</p>
-          <p className="text-gray-500 text-sm mt-4">Ваш Telegram ID: {userId || 'Не определён'}</p>
-          <p className="text-gray-500 text-sm">Доступ разрешён только для ID: {ADMIN_ID}</p>
-          <button 
-            onClick={() => window.location.href = '/'}
-            className="mt-4 bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg text-sm transition"
-          >
-            Вернуться в игру
-          </button>
-        </div>
-      </div>
-    )
+
+  const banUser = () => {
+    if (!targetUserId) {
+      setLogMessage('❌ Введите ID пользователя')
+      return
+    }
+    const newBanned = {
+      ...bannedUsers,
+      [targetUserId]: { reason: banReason || 'Нарушение правил', date: new Date().toLocaleString() }
+    }
+    setBannedUsers(newBanned)
+    localStorage.setItem('banned_users', JSON.stringify(newBanned))
+    setLogMessage(`✅ Пользователь ${targetUserId} забанен`)
+    setTargetUserId('')
+    setBanReason('')
   }
-  
-  // Форма входа (только для админа)
+
+  const unbanUser = (id: string) => {
+    const newBanned = { ...bannedUsers }
+    delete newBanned[id]
+    setBannedUsers(newBanned)
+    localStorage.setItem('banned_users', JSON.stringify(newBanned))
+    setLogMessage(`✅ Пользователь ${id} разбанен`)
+  }
+
+  const giveShards = () => {
+    if (!targetUserId) {
+      setLogMessage('❌ Введите ID пользователя')
+      return
+    }
+    setLogMessage(`✅ Выдано ${shardsAmount} осколков игроку ${targetUserId}`)
+  }
+
+  const giveExp = () => {
+    if (!targetUserId) {
+      setLogMessage('❌ Введите ID пользователя')
+      return
+    }
+    setLogMessage(`✅ Выдано ${expAmount} EXP игроку ${targetUserId}`)
+  }
+
+  const giveMoney = () => {
+    if (!targetUserId) {
+      setLogMessage('❌ Введите ID пользователя')
+      return
+    }
+    setLogMessage(`✅ Выдано ${moneyAmount} денег игроку ${targetUserId}`)
+  }
+
+  const giveVip = () => {
+    if (!targetUserId) {
+      setLogMessage('❌ Введите ID пользователя')
+      return
+    }
+    setLogMessage(`👑 VIP навсегда выдан игроку ${targetUserId}`)
+  }
+
+  const sendGlobalMessage = () => {
+    const msg = prompt('Введите сообщение для всех игроков:')
+    if (msg) setLogMessage(`📢 Отправлено: "${msg}"`)
+  }
+
+  const clearAllData = () => {
+    if (confirm('⚠️ Удалить ВСЕ данные?')) {
+      localStorage.clear()
+      setLogMessage('✅ Данные удалены. Страница перезагрузится.')
+      setTimeout(() => window.location.reload(), 2000)
+    }
+  }
+
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
         <div className="bg-gray-800 rounded-2xl p-8 max-w-md w-full">
-          <div className="text-center mb-4">
-            <div className="text-5xl mb-2">👑</div>
-            <h2 className="text-2xl font-bold text-red-400">Админ-панель</h2>
-            <p className="text-gray-400 text-sm mt-1">Добро пожаловать, Создатель</p>
-          </div>
+          <h2 className="text-2xl font-bold text-center text-red-400 mb-6">🔐 Админ-панель</h2>
           <input
             type="password"
             placeholder="Введите пароль"
@@ -99,246 +123,127 @@ export default function AdminPanel() {
             className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white mb-4"
             onKeyPress={(e) => e.key === 'Enter' && handleLogin()}
           />
-          <button
-            onClick={handleLogin}
-            className="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 py-2 rounded-lg font-semibold transition"
-          >
-            Войти в админку
+          <button onClick={handleLogin} className="w-full bg-red-600 hover:bg-red-700 py-2 rounded-lg font-semibold">
+            Войти
           </button>
-          {logMessage && (
-            <p className={`mt-4 text-sm text-center ${logMessage.includes('✅') ? 'text-green-400' : 'text-red-400'}`}>
-              {logMessage}
-            </p>
-          )}
+          {logMessage && <p className="mt-4 text-sm text-center text-red-400">{logMessage}</p>}
         </div>
       </div>
     )
   }
-  
-  // Основная панель админа (только для тебя)
+
   return (
     <div className="min-h-screen bg-gray-900 text-white pb-24">
       <div className="bg-gradient-to-r from-red-900 to-red-800 p-4 sticky top-0 z-10">
         <div className="flex justify-between items-center">
           <h1 className="text-xl font-bold">👑 Админ-панель</h1>
-          <button 
-            onClick={() => setIsAuthenticated(false)} 
-            className="text-sm bg-red-700 px-3 py-1 rounded-lg hover:bg-red-600 transition"
-          >
+          <button onClick={() => setIsAuthenticated(false)} className="text-sm bg-red-700 px-3 py-1 rounded-lg hover:bg-red-600">
             Выйти
           </button>
         </div>
-        <p className="text-xs text-red-300 mt-1">
-          Добро пожаловать, Администратор! Твой ID: {ADMIN_ID}
-        </p>
+        <p className="text-xs text-red-300 mt-1">Добро пожаловать, Администратор! ID: {userId || '—'}</p>
       </div>
-      
+
       <div className="flex border-b border-gray-700 overflow-x-auto">
-        <button onClick={() => setActiveTab('users')} className={`flex-1 py-3 text-sm font-semibold ${activeTab === 'users' ? 'text-red-400 border-b-2 border-red-400' : 'text-gray-400'}`}>👥 Пользователи</button>
-        <button onClick={() => setActiveTab('donate')} className={`flex-1 py-3 text-sm font-semibold ${activeTab === 'donate' ? 'text-red-400 border-b-2 border-red-400' : 'text-gray-400'}`}>💎 Выдача</button>
-        <button onClick={() => setActiveTab('bans')} className={`flex-1 py-3 text-sm font-semibold ${activeTab === 'bans' ? 'text-red-400 border-b-2 border-red-400' : 'text-gray-400'}`}>🔨 Баны</button>
-        <button onClick={() => setActiveTab('stats')} className={`flex-1 py-3 text-sm font-semibold ${activeTab === 'stats' ? 'text-red-400 border-b-2 border-red-400' : 'text-gray-400'}`}>📊 Статистика</button>
-        <button onClick={() => setActiveTab('settings')} className={`flex-1 py-3 text-sm font-semibold ${activeTab === 'settings' ? 'text-red-400 border-b-2 border-red-400' : 'text-gray-400'}`}>⚙️ Настройки</button>
+        <button onClick={() => setActiveTab('users')} className={`flex-1 py-3 text-sm font-semibold ${activeTab === 'users' ? 'text-red-400 border-b-2 border-red-400' : 'text-gray-400 hover:text-white'}`}>👥 Пользователи</button>
+        <button onClick={() => setActiveTab('donate')} className={`flex-1 py-3 text-sm font-semibold ${activeTab === 'donate' ? 'text-red-400 border-b-2 border-red-400' : 'text-gray-400 hover:text-white'}`}>💎 Выдача</button>
+        <button onClick={() => setActiveTab('bans')} className={`flex-1 py-3 text-sm font-semibold ${activeTab === 'bans' ? 'text-red-400 border-b-2 border-red-400' : 'text-gray-400 hover:text-white'}`}>🔨 Баны</button>
+        <button onClick={() => setActiveTab('stats')} className={`flex-1 py-3 text-sm font-semibold ${activeTab === 'stats' ? 'text-red-400 border-b-2 border-red-400' : 'text-gray-400 hover:text-white'}`}>📊 Статистика</button>
+        <button onClick={() => setActiveTab('settings')} className={`flex-1 py-3 text-sm font-semibold ${activeTab === 'settings' ? 'text-red-400 border-b-2 border-red-400' : 'text-gray-400 hover:text-white'}`}>⚙️ Настройки</button>
       </div>
-      
+
       <div className="p-4">
         {logMessage && (
           <div className="mb-4 p-3 bg-gray-800 rounded-lg text-sm border-l-4 border-red-500">
             {logMessage}
           </div>
         )}
-        
-        {/* Вкладка: Пользователи */}
+
         {activeTab === 'users' && (
           <div className="space-y-4">
             <div className="bg-gray-800 rounded-lg p-4">
-              <h3 className="font-semibold mb-3 flex items-center gap-2">🔍 <span>Поиск пользователя</span></h3>
+              <h3 className="font-semibold mb-3">🔍 Поиск пользователя</h3>
               <div className="flex gap-2">
-                <input
-                  type="text"
-                  placeholder="Telegram ID пользователя"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-4 py-2"
-                />
-                <button className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg transition">Найти</button>
+                <input type="text" placeholder="Telegram ID" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="flex-1 bg-gray-700 rounded-lg px-4 py-2" />
+                <button className="bg-blue-600 px-4 py-2 rounded-lg">Найти</button>
               </div>
-              <p className="text-xs text-gray-500 mt-2">ℹ️ Введите ID пользователя для поиска</p>
             </div>
-            
             <div className="bg-gray-800 rounded-lg p-4">
-              <h3 className="font-semibold mb-3 flex items-center gap-2">📋 <span>Забаненные пользователи</span></h3>
+              <h3 className="font-semibold mb-3">📋 Забаненные</h3>
               {Object.keys(bannedUsers).length === 0 ? (
-                <p className="text-gray-500 text-sm">Нет забаненных пользователей</p>
+                <p className="text-gray-500 text-sm">Нет забаненных</p>
               ) : (
-                <div className="space-y-2">
-                  {Object.entries(bannedUsers).map(([id, data]) => (
-                    <div key={id} className="flex justify-between items-center bg-gray-700 p-3 rounded-lg">
-                      <div>
-                        <div className="font-mono text-sm">{id}</div>
-                        <div className="text-xs text-gray-400">Причина: {data.reason}</div>
-                        <div className="text-xs text-gray-500">{data.date}</div>
-                      </div>
-                      <button onClick={() => unbanUser(id)} className="bg-green-600 hover:bg-green-700 px-3 py-1 rounded text-sm transition">Разбанить</button>
-                    </div>
-                  ))}
-                </div>
+                Object.entries(bannedUsers).map(([id, data]) => (
+                  <div key={id} className="flex justify-between items-center bg-gray-700 p-2 rounded mb-2">
+                    <div><div className="font-mono text-sm">{id}</div><div className="text-xs text-gray-400">{data.reason}</div></div>
+                    <button onClick={() => unbanUser(id)} className="bg-green-600 px-3 py-1 rounded text-sm">Разбанить</button>
+                  </div>
+                ))
               )}
             </div>
           </div>
         )}
-        
-        {/* Вкладка: Выдача доната */}
+
         {activeTab === 'donate' && (
           <div className="space-y-4">
             <div className="bg-gray-800 rounded-lg p-4">
-              <h3 className="font-semibold mb-3 flex items-center gap-2">💎 <span>Выдать осколки</span></h3>
-              <input
-                type="text"
-                placeholder="Telegram ID пользователя"
-                value={targetUserId}
-                onChange={(e) => setTargetUserId(e.target.value)}
-                className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 mb-2"
-              />
-              <input
-                type="number"
-                value={shardsAmount}
-                onChange={(e) => setShardsAmount(Number(e.target.value))}
-                className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 mb-2"
-              />
-              <button onClick={giveShards} className="w-full bg-purple-600 hover:bg-purple-700 py-2 rounded-lg font-semibold transition">Выдать осколки</button>
+              <h3 className="font-semibold mb-3">💎 Выдать осколки</h3>
+              <input type="text" placeholder="ID пользователя" value={targetUserId} onChange={(e) => setTargetUserId(e.target.value)} className="w-full bg-gray-700 rounded-lg px-4 py-2 mb-2" />
+              <input type="number" value={shardsAmount} onChange={(e) => setShardsAmount(Number(e.target.value))} className="w-full bg-gray-700 rounded-lg px-4 py-2 mb-2" />
+              <button onClick={giveShards} className="w-full bg-purple-600 py-2 rounded-lg">Выдать осколки</button>
             </div>
-            
             <div className="bg-gray-800 rounded-lg p-4">
-              <h3 className="font-semibold mb-3 flex items-center gap-2">✨ <span>Выдать опыт</span></h3>
-              <input
-                type="text"
-                placeholder="Telegram ID пользователя"
-                value={targetUserId}
-                onChange={(e) => setTargetUserId(e.target.value)}
-                className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 mb-2"
-              />
-              <input
-                type="number"
-                value={expAmount}
-                onChange={(e) => setExpAmount(Number(e.target.value))}
-                className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 mb-2"
-              />
-              <button onClick={giveExp} className="w-full bg-yellow-600 hover:bg-yellow-700 py-2 rounded-lg font-semibold transition">Выдать опыт</button>
+              <h3 className="font-semibold mb-3">✨ Выдать опыт</h3>
+              <input type="text" placeholder="ID пользователя" value={targetUserId} onChange={(e) => setTargetUserId(e.target.value)} className="w-full bg-gray-700 rounded-lg px-4 py-2 mb-2" />
+              <input type="number" value={expAmount} onChange={(e) => setExpAmount(Number(e.target.value))} className="w-full bg-gray-700 rounded-lg px-4 py-2 mb-2" />
+              <button onClick={giveExp} className="w-full bg-yellow-600 py-2 rounded-lg">Выдать опыт</button>
             </div>
-            
             <div className="bg-gray-800 rounded-lg p-4">
-              <h3 className="font-semibold mb-3 flex items-center gap-2">💰 <span>Выдать деньги</span></h3>
-              <input
-                type="text"
-                placeholder="Telegram ID пользователя"
-                value={targetUserId}
-                onChange={(e) => setTargetUserId(e.target.value)}
-                className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 mb-2"
-              />
-              <input
-                type="number"
-                value={moneyAmount}
-                onChange={(e) => setMoneyAmount(Number(e.target.value))}
-                className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 mb-2"
-              />
-              <button onClick={giveMoney} className="w-full bg-green-600 hover:bg-green-700 py-2 rounded-lg font-semibold transition">Выдать деньги</button>
+              <h3 className="font-semibold mb-3">💰 Выдать деньги</h3>
+              <input type="text" placeholder="ID пользователя" value={targetUserId} onChange={(e) => setTargetUserId(e.target.value)} className="w-full bg-gray-700 rounded-lg px-4 py-2 mb-2" />
+              <input type="number" value={moneyAmount} onChange={(e) => setMoneyAmount(Number(e.target.value))} className="w-full bg-gray-700 rounded-lg px-4 py-2 mb-2" />
+              <button onClick={giveMoney} className="w-full bg-green-600 py-2 rounded-lg">Выдать деньги</button>
             </div>
-            
             <div className="bg-gradient-to-r from-amber-900/50 to-yellow-900/50 rounded-lg p-4 border border-yellow-500">
-              <h3 className="font-semibold mb-3 flex items-center gap-2">👑 <span>Выдать VIP навсегда</span></h3>
-              <input
-                type="text"
-                placeholder="Telegram ID пользователя"
-                value={targetUserId}
-                onChange={(e) => setTargetUserId(e.target.value)}
-                className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 mb-2"
-              />
-              <button onClick={giveVip} className="w-full bg-amber-600 hover:bg-amber-700 py-2 rounded-lg font-semibold transition">👑 Выдать VIP навсегда</button>
+              <h3 className="font-semibold mb-3">👑 Выдать VIP</h3>
+              <input type="text" placeholder="ID пользователя" value={targetUserId} onChange={(e) => setTargetUserId(e.target.value)} className="w-full bg-gray-700 rounded-lg px-4 py-2 mb-2" />
+              <button onClick={giveVip} className="w-full bg-amber-600 py-2 rounded-lg">Выдать VIP навсегда</button>
             </div>
           </div>
         )}
-        
-        {/* Вкладка: Баны */}
+
         {activeTab === 'bans' && (
           <div className="bg-gray-800 rounded-lg p-4">
-            <h3 className="font-semibold mb-3 flex items-center gap-2">🔨 <span>Забанить пользователя</span></h3>
-            <input
-              type="text"
-              placeholder="Telegram ID пользователя"
-              value={targetUserId}
-              onChange={(e) => setTargetUserId(e.target.value)}
-              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 mb-2"
-            />
-            <input
-              type="text"
-              placeholder="Причина бана (необязательно)"
-              value={banReason}
-              onChange={(e) => setBanReason(e.target.value)}
-              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 mb-2"
-            />
-            <button onClick={banUser} className="w-full bg-red-600 hover:bg-red-700 py-2 rounded-lg font-semibold transition">🔨 Забанить</button>
+            <h3 className="font-semibold mb-3">🔨 Забанить</h3>
+            <input type="text" placeholder="ID пользователя" value={targetUserId} onChange={(e) => setTargetUserId(e.target.value)} className="w-full bg-gray-700 rounded-lg px-4 py-2 mb-2" />
+            <input type="text" placeholder="Причина" value={banReason} onChange={(e) => setBanReason(e.target.value)} className="w-full bg-gray-700 rounded-lg px-4 py-2 mb-2" />
+            <button onClick={banUser} className="w-full bg-red-600 py-2 rounded-lg">Забанить</button>
           </div>
         )}
-        
-        {/* Вкладка: Статистика */}
+
         {activeTab === 'stats' && (
           <div className="bg-gray-800 rounded-lg p-4">
-            <h3 className="font-semibold mb-3 flex items-center gap-2">📊 <span>Общая статистика</span></h3>
-            <div className="space-y-3 text-sm">
-              <div className="flex justify-between border-b border-gray-700 pb-2">
-                <span className="text-gray-400">💰 Всего заработано:</span>
-                <span className="text-green-400 font-bold">${статистика?.всегоЗаработано?.toLocaleString() || 0}</span>
-              </div>
-              <div className="flex justify-between border-b border-gray-700 pb-2">
-                <span className="text-gray-400">📦 Всего продаж:</span>
-                <span className="text-white">{статистика?.всегоПродаж || 0}</span>
-              </div>
-              <div className="flex justify-between border-b border-gray-700 pb-2">
-                <span className="text-gray-400">👮 Всего взяток:</span>
-                <span className="text-white">{статистика?.всегоВзяток || 0}</span>
-              </div>
-              <div className="flex justify-between border-b border-gray-700 pb-2">
-                <span className="text-gray-400">🚨 Всего рейдов:</span>
-                <span className="text-white">{статистика?.всегоРейдов || 0}</span>
-              </div>
-              <div className="flex justify-between border-b border-gray-700 pb-2">
-                <span className="text-gray-400">🚗 Всего поездок:</span>
-                <span className="text-white">{статистика?.всегоПоездок || 0}</span>
-              </div>
-              <div className="flex justify-between pt-2">
-                <span className="text-gray-400">⭐ Твой уровень:</span>
-                <span className="text-purple-400 font-bold">{уровень}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-400">💎 Твои осколки:</span>
-                <span className="text-blue-400 font-bold">{осколки}</span>
-              </div>
+            <h3 className="font-semibold mb-3">📊 Статистика</h3>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between"><span>💰 Заработано:</span><span className="text-green-400">${статистика?.всегоЗаработано?.toLocaleString() || 0}</span></div>
+              <div className="flex justify-between"><span>📦 Продаж:</span><span>{статистика?.всегоПродаж || 0}</span></div>
+              <div className="flex justify-between"><span>👮 Взяток:</span><span>{статистика?.всегоВзяток || 0}</span></div>
+              <div className="flex justify-between"><span>🚨 Рейдов:</span><span>{статистика?.всегоРейдов || 0}</span></div>
+              <div className="flex justify-between"><span>⭐ Уровень:</span><span>{уровень}</span></div>
+              <div className="flex justify-between"><span>💎 Осколки:</span><span>{осколки}</span></div>
             </div>
           </div>
         )}
-        
-        {/* Вкладка: Настройки */}
+
         {activeTab === 'settings' && (
           <div className="space-y-4">
             <div className="bg-gray-800 rounded-lg p-4">
-              <h3 className="font-semibold mb-3 flex items-center gap-2">📢 <span>Глобальные уведомления</span></h3>
-              <button onClick={sendGlobalMessage} className="w-full bg-blue-600 hover:bg-blue-700 py-2 rounded-lg font-semibold transition">Отправить сообщение всем игрокам</button>
+              <h3 className="font-semibold mb-3">📢 Уведомления</h3>
+              <button onClick={sendGlobalMessage} className="w-full bg-blue-600 py-2 rounded-lg">Отправить сообщение всем</button>
             </div>
-            
-            <div className="bg-gray-800 rounded-lg p-4">
-              <h3 className="font-semibold mb-3 flex items-center gap-2">🎮 <span>Игровые события</span></h3>
-              <div className="space-y-2">
-                <button className="w-full bg-gray-700 hover:bg-gray-600 py-2 rounded-lg text-sm transition">🎉 Запустить ивент x2 опыт (на 1 час)</button>
-                <button className="w-full bg-gray-700 hover:bg-gray-600 py-2 rounded-lg text-sm transition">💰 Запустить ивент x2 деньги (на 1 час)</button>
-                <button className="w-full bg-gray-700 hover:bg-gray-600 py-2 rounded-lg text-sm transition">💎 Выдать всем по 10 осколков</button>
-              </div>
-            </div>
-            
-            <div className="bg-red-900/30 border-2 border-red-500 rounded-lg p-4">
-              <h3 className="font-semibold mb-3 text-red-400 flex items-center gap-2">⚠️ <span>Опасная зона</span></h3>
-              <button onClick={clearAllData} className="w-full bg-red-700 hover:bg-red-800 py-2 rounded-lg font-semibold transition">💣 Удалить все данные игры (НЕОБРАТИМО)</button>
-              <p className="text-xs text-gray-500 mt-2 text-center">Это удалит прогресс ВСЕХ игроков на их устройствах</p>
+            <div className="bg-red-900/30 border border-red-500 rounded-lg p-4">
+              <h3 className="font-semibold mb-3 text-red-400">⚠️ Опасная зона</h3>
+              <button onClick={clearAllData} className="w-full bg-red-700 py-2 rounded-lg">💣 Удалить все данные</button>
             </div>
           </div>
         )}
