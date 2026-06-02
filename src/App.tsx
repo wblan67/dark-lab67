@@ -224,37 +224,45 @@ function App() {
         }
       `}</style>
       
-      {/* Супер-компактная шапка: аватарка 10px, всё в одну строку */}
-      <div className="bg-gradient-to-r from-gray-800 to-gray-900 px-2 py-0.5 flex items-center gap-1 border-b border-gray-700 sticky top-0 z-20">
+      {/* Шапка с большой аватаркой 128px как в Telegram */}
+      <div className="bg-gradient-to-r from-gray-800 to-gray-900 p-3 flex items-center gap-4 border-b border-gray-700 sticky top-0 z-20">
         {telegramUser?.photo_url ? (
           <img 
             src={telegramUser.photo_url} 
             alt="avatar" 
-            style={{ width: '10px', height: '10px' }}
-            className="rounded-full border border-green-500 flex-shrink-0"
+            className="w-32 h-32 rounded-full border-4 border-green-500 flex-shrink-0"
           />
         ) : (
-          <div 
-            style={{ width: '10px', height: '10px' }}
-            className="rounded-full bg-red-700 flex items-center justify-center text-[6px] border border-red-500 flex-shrink-0"
-          >
+          <div className="w-32 h-32 rounded-full bg-red-700 flex items-center justify-center text-5xl border-4 border-red-500 flex-shrink-0">
             👑
           </div>
         )}
         
-        <div className="flex-1 min-w-0">
+        <div className="flex-1">
           {telegramUser ? (
-            <div className="text-[10px] text-white truncate">
-              <span className="font-medium">{telegramUser.first_name?.slice(0, 15)}</span>
-              <span className="text-gray-400 ml-0.5">@{telegramUser.username || 'no_user'}</span>
-              <span className="text-gray-500 ml-0.5">• {userId || '—'}</span>
-            </div>
+            <>
+              <div className="font-bold text-xl text-white">
+                {telegramUser.first_name} {telegramUser.last_name || ''}
+              </div>
+              <div className="text-sm text-gray-400">
+                @{telegramUser.username || 'no username'}
+              </div>
+              <div className="text-xs text-gray-500 mt-1">
+                ID: {userId || '—'}
+              </div>
+            </>
           ) : (
-            <div className="text-[10px] text-white truncate">
-              <span className="font-medium text-red-300">Админ</span>
-              <span className="text-red-400 ml-0.5">@{ADMIN_ID}</span>
-              <span className="text-red-500 ml-0.5">• {ADMIN_ID}</span>
-            </div>
+            <>
+              <div className="font-bold text-xl text-red-300">
+                Администратор
+              </div>
+              <div className="text-sm text-red-400">
+                Режим разработчика
+              </div>
+              <div className="text-xs text-red-500 mt-1">
+                ID: {ADMIN_ID}
+              </div>
+            </>
           )}
         </div>
       </div>
