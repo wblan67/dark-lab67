@@ -255,51 +255,44 @@ function App() {
         }
       `}</style>
       
-      {/* Если есть данные из Telegram — показываем аватарку и имя */}
-      {telegramUser && (
-        <div className="bg-gradient-to-r from-gray-800 to-gray-900 p-3 flex items-center gap-3 border-b border-gray-700 sticky top-0 z-20">
-          {telegramUser.photo_url && (
-            <img 
-              src={telegramUser.photo_url} 
-              alt="avatar" 
-              className="w-12 h-12 rounded-full border-2 border-green-500"
-            />
-          )}
-          <div className="flex-1">
-            <div className="font-bold text-white">
-              {telegramUser.first_name} {telegramUser.last_name || ''}
-            </div>
-            <div className="text-xs text-gray-400">
-              @{telegramUser.username || 'no username'}
-            </div>
-          </div>
-          <div className="text-right">
-            <div className="text-xs text-gray-400">Telegram ID</div>
-            <div className="text-sm font-mono text-gray-300">{userId?.slice(-8) || '—'}</div>
-          </div>
-        </div>
-      )}
-      
-      {/* Если данных из Telegram нет — показываем админ-шапку с твоим ID */}
-      {!telegramUser && (
-        <div className="bg-gradient-to-r from-red-900 to-red-800 p-3 flex items-center gap-3 border-b border-red-700 sticky top-0 z-20">
-          <div className="w-12 h-12 rounded-full bg-red-700 flex items-center justify-center text-2xl">
+      {/* КОМПАКТНАЯ ШАПКА: аватарка слева (уменьшена), информация справа */}
+      <div className="bg-gradient-to-r from-gray-800 to-gray-900 p-2 flex items-center gap-3 border-b border-gray-700 sticky top-0 z-20">
+        {/* Аватарка — уменьшена (w-8 вместо w-12) */}
+        {telegramUser?.photo_url ? (
+          <img 
+            src={telegramUser.photo_url} 
+            alt="avatar" 
+            className="w-8 h-8 rounded-full border-2 border-green-500"
+          />
+        ) : (
+          <div className="w-8 h-8 rounded-full bg-red-700 flex items-center justify-center text-sm border-2 border-red-500">
             👑
           </div>
-          <div className="flex-1">
-            <div className="font-bold text-white">
-              Администратор
-            </div>
-            <div className="text-xs text-red-300">
-              Режим разработчика
-            </div>
-          </div>
-          <div className="text-right">
-            <div className="text-xs text-red-400">Ваш ID</div>
-            <div className="text-sm font-mono text-red-300">{ADMIN_ID}</div>
-          </div>
+        )}
+        
+        {/* Информация справа от аватарки */}
+        <div className="flex-1">
+          {telegramUser ? (
+            <>
+              <div className="font-bold text-sm text-white">
+                {telegramUser.first_name} {telegramUser.last_name || ''}
+              </div>
+              <div className="text-xs text-gray-400">
+                @{telegramUser.username || 'no username'} • ID: {userId?.slice(-8) || '—'}
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="font-bold text-sm text-white">
+                Администратор
+              </div>
+              <div className="text-xs text-red-300">
+                Режим разработчика • ID: {ADMIN_ID}
+              </div>
+            </>
+          )}
         </div>
-      )}
+      </div>
       
       <div className="bg-gray-800 p-4 sticky top-0 z-10">
         <div className="flex justify-between items-center">
