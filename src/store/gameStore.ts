@@ -1720,20 +1720,29 @@ export const useGameStore = create<GameState>()(
       // ========== БОКСЫ И ГЛИФЫ ==========
 
       открытьБокс: async (boxId, glyphId) => {
-        const { осколки, глифы } = get()
-        const box = getBoxById(boxId)
-        if (!box) return false
-        if (осколки < box.price) return false
-        
-        set({ осколки: осколки - box.price })
-        
-        if (!глифы[glyphId]) {
-          set({ глифы: { ...глифы, [glyphId]: true } })
-        }
-        
-        await get().сохранитьПрогресс()
-        return true
-      },
+  const { осколки, глифы, статистика } = get()
+  const box = getBoxById(boxId)
+  if (!box) return false
+  if (осколки < box.price) return false
+  
+  set({ осколки: осколки - box.price })
+  
+  if (!глифы[glyphId]) {
+    set({ глифы: { ...глифы, [glyphId]: true } })
+  }
+  
+  // ↓↓↓ ДОБАВЛЯЕМ СЧЁТЧИК ОТКРЫТЫХ БОКСОВ ↓↓↓
+  set({
+    статистика: {
+      ...статистика,
+      открытоБоксов: (статистика?.открытоБоксов || 0) + 1
+    }
+  })
+  
+  await get().сохранитьПрогресс()
+  get().проверитьВсеАчивки()
+  return true
+},
 
       экипироватьГлиф: (glyphId) => {
         const { глифы, экипированныеГлифы } = get()
