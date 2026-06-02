@@ -21,9 +21,6 @@ import GuildInvites from './components/GuildInvites'
 import Referral from './components/Referral'
 import AdminPanel from './components/AdminPanel'
 
-// ============================================
-// ТВОЙ TELEGRAM ID
-// ============================================
 const ADMIN_ID = '6034090849'
 
 const INGREDIENTS = {
@@ -66,7 +63,7 @@ const CARS_LIST = [
   { id: 'secret', name: '🛸 Секретная', time: 1, capacity: 1000 }
 ]
 
-const НАЗВАНИЯ_АЧИВОК: Record<string, string> = {
+const НАЗВАНИЯ_АЧИВОК = {
   'welcome': '🏠 Добро пожаловать',
   'regular': '🏠 Завсегдатай',
   'hardworker': '🏠 Трудоголик',
@@ -75,9 +72,9 @@ const НАЗВАНИЯ_АЧИВОК: Record<string, string> = {
   'clicker': '🏠 Кликер',
   'clicker_monster': '🏠 Кликер-монстр',
   'first_craft': '🧪 Первый укол',
-  'crazy_chemist': '🧪 Химик ебанутый',
+  'crazy_chemist': '🧪 Химик',
   'full_drugs': '🧪 Полный угар',
-  'krokodil_master': '🐊 Крокодил ебаный',
+  'krokodil_master': '🐊 Крокодил',
   'weed_master': '🌿 Обдолбай',
   'meth_master': '❄️ Снежный барс',
   'walter_white': '💎 Вальтер Вайт',
@@ -85,26 +82,26 @@ const НАЗВАНИЯ_АЧИВОК: Record<string, string> = {
   'first_sale': '💰 Первый лох',
   'dealer': '💰 Барыга',
   'millionaire': '💰 Хуиллионер',
-  'wholesale': '💰 Оптовая барыга',
-  'money_bag': '💰 Денежный мешок',
+  'wholesale': '💰 Опт',
+  'money_bag': '💰 Мешок',
   'first_car': '🚗 Бомж-такси',
-  'five_cars': '🚗 Автопарк долбоеба',
+  'five_cars': '🚗 Автопарк',
   'all_cars': '🚗 Король дорог',
-  'secret_car': '🚗 Тачка для пафоса',
-  'racer': '🚗 Гонщик ебаный',
+  'secret_car': '🚗 Тачка',
+  'racer': '🚗 Гонщик',
   'first_business': '🏢 Легалайз',
   'mafia': '🏢 Мафиози',
   'clean_money': '🏢 Чистые бабки',
-  'wanted': '👮 В розыск ебаный',
-  'bribe_master': '👮 Взятка мусорам',
-  'untouchable': '👮 Неуловимый хуй',
-  'five_equipment': '🔧 Подвал химика',
-  'all_equipment': '🔧 Лаборатория во все дыры',
-  'repair_master': '🔧 Мастер-ломастер',
-  'level_5': '⭐ Сосунок',
-  'level_10': '⭐ Хуй с горы',
-  'level_20': '⭐ Наркопанк',
-  'craft_streak': '🔨 Хуякс-хуякс'
+  'wanted': '👮 В розыск',
+  'bribe_master': '👮 Взятка',
+  'untouchable': '👮 Неуловимый',
+  'five_equipment': '🔧 Подвал',
+  'all_equipment': '🔧 Лаба',
+  'repair_master': '🔧 Мастер',
+  'level_5': '⭐ 5 уровень',
+  'level_10': '⭐ 10 уровень',
+  'level_20': '⭐ 20 уровень',
+  'craft_streak': '🔨 Серия'
 }
 
 function App() {
@@ -114,7 +111,6 @@ function App() {
   
   const userId = useGameStore((state) => state.userId)
   const баланс = useGameStore((state) => state.баланс)
-  const инвентарь = useGameStore((state) => state.инвентарь)
   const уровень = useGameStore((state) => state.уровень)
   const загрузка = useGameStore((state) => state.загрузка)
   const розыск = useGameStore((state) => state.розыск)
@@ -122,17 +118,13 @@ function App() {
   const загрузитьПользователя = useGameStore((state) => state.загрузитьПользователя)
   const купитьПредмет = useGameStore((state) => state.купитьПредмет)
   const активнаяМашина = useGameStore((state) => state.активнаяМашина)
-  const активныеПродажи = useGameStore((state) => state.активныеПродажи)
-  const начатьПродажу = useGameStore((state) => state.начатьПродажу)
   const текущиеЦены = useGameStore((state) => state.текущиеЦены)
   const следующееОбновлениеЦен = useGameStore((state) => state.следующееОбновлениеЦен)
   const запланироватьОбновлениеЦен = useGameStore((state) => state.запланироватьОбновлениеЦен)
   
-  // Сохраняем реальный ID в localStorage при его изменении
   useEffect(() => {
     if (userId && userId !== 'test_user_123') {
       localStorage.setItem('telegram_id', userId)
-      console.log('💾 Сохранён реальный ID в localStorage:', userId)
     }
   }, [userId])
   
@@ -149,28 +141,14 @@ function App() {
     return () => clearInterval(interval)
   }, [])
   
-  const обработчикКлика = () => {
-    const { статистика } = useGameStore.getState()
-    useGameStore.setState({
-      статистика: {
-        ...статистика,
-        всегоКликов: (статистика?.всегоКликов || 0) + 1
-      }
-    })
-  }
-  
   useEffect(() => {
     const { запланироватьОбновлениеЦен, следующееОбновлениеЦен, обновитьЦены } = useGameStore.getState()
-    if (следующееОбновлениеЦен < Date.now()) {
-      обновитьЦены()
-    }
+    if (следующееОбновлениеЦен < Date.now()) обновитьЦены()
     запланироватьОбновлениеЦен()
   }, [])
   
   useEffect(() => {
-    const handler = (e: any) => {
-      установитьВкладку(e.detail)
-    }
+    const handler = (e: any) => установитьВкладку(e.detail)
     window.addEventListener('switchTab', handler)
     return () => window.removeEventListener('switchTab', handler)
   }, [])
@@ -185,38 +163,27 @@ function App() {
     return () => window.removeEventListener('achievementUnlocked', handler)
   }, [])
   
-  // ========== ПОЛУЧЕНИЕ ДАННЫХ ПОЛЬЗОВАТЕЛЯ TELEGRAM ==========
   useEffect(() => {
     const tg = (window as any).Telegram?.WebApp
-    console.log('🔍 Telegram WebApp объект:', tg ? 'Есть' : 'Нет')
-    
     if (tg && tg.initDataUnsafe?.user) {
       const user = tg.initDataUnsafe.user
-      console.log('👤 Пользователь из Telegram:', user)
-      console.log('🆔 Telegram ID:', user.id)
       setTelegramUser(user)
       if (user.id) {
         const tgId = String(user.id)
-        console.log('✅ Сохраняем Telegram ID:', tgId)
         загрузитьПользователя(tgId)
         localStorage.setItem('telegram_id', tgId)
       }
       tg.ready()
       tg.expand()
     } else {
-      // Пробуем загрузить ID из localStorage
       const savedId = localStorage.getItem('telegram_id')
-      console.log('📦 ID из localStorage:', savedId)
       if (savedId && savedId !== 'test_user_123') {
-        console.log('✅ Восстанавливаем ID из localStorage:', savedId)
         загрузитьПользователя(savedId)
       } else {
-        console.log('⚠️ Нет данных, используем test_user_123')
         загрузитьПользователя('test_user_123')
       }
     }
   }, [])
-  // ========== КОНЕЦ ==========
   
   if (загрузка) {
     return <div className="min-h-screen bg-gray-900 flex items-center justify-center"><div className="text-white text-xl">Загрузка...</div></div>
@@ -231,8 +198,14 @@ function App() {
   
   const активнаяМашинаДанные = CARS_LIST.find(c => c.id === активнаяМашина) || CARS_LIST[0]
   
-  const getPrice = (drugKey: string) => {
-    return текущиеЦены[drugKey] || 100
+  const обработчикКлика = () => {
+    const { статистика } = useGameStore.getState()
+    useGameStore.setState({
+      статистика: {
+        ...статистика,
+        всегоКликов: (статистика?.всегоКликов || 0) + 1
+      }
+    })
   }
   
   return (
@@ -242,12 +215,8 @@ function App() {
           from { width: 100%; }
           to { width: 0%; }
         }
-        .animate-shrink {
-          animation: shrink 3s linear forwards;
-        }
-        .animate-bounce {
-          animation: bounce 0.5s ease-out;
-        }
+        .animate-shrink { animation: shrink 3s linear forwards; }
+        .animate-bounce { animation: bounce 0.5s ease-out; }
         @keyframes bounce {
           0% { transform: translateY(100px); opacity: 0; }
           50% { transform: translateY(-10px); opacity: 1; }
@@ -255,22 +224,24 @@ function App() {
         }
       `}</style>
       
-      {/* МАКСИМАЛЬНО КОМПАКТНАЯ ШАПКА: аватарка 16px, всё в одну строку */}
+      {/* Супер-компактная шапка: аватарка 10px, всё в одну строку */}
       <div className="bg-gradient-to-r from-gray-800 to-gray-900 px-2 py-0.5 flex items-center gap-1 border-b border-gray-700 sticky top-0 z-20">
-        {/* Аватарка — очень маленькая (w-4 = 16px) */}
         {telegramUser?.photo_url ? (
           <img 
             src={telegramUser.photo_url} 
             alt="avatar" 
-            className="w-4 h-4 rounded-full border border-green-500 flex-shrink-0"
+            style={{ width: '10px', height: '10px' }}
+            className="rounded-full border border-green-500 flex-shrink-0"
           />
         ) : (
-          <div className="w-4 h-4 rounded-full bg-red-700 flex items-center justify-center text-[6px] border border-red-500 flex-shrink-0">
+          <div 
+            style={{ width: '10px', height: '10px' }}
+            className="rounded-full bg-red-700 flex items-center justify-center text-[6px] border border-red-500 flex-shrink-0"
+          >
             👑
           </div>
         )}
         
-        {/* Информация справа от аватарки — в одну строку */}
         <div className="flex-1 min-w-0">
           {telegramUser ? (
             <div className="text-[10px] text-white truncate">
@@ -380,9 +351,7 @@ function App() {
           <div className="text-blue-400">🚗 {активнаяМашинаДанные.name} ({активнаяМашинаДанные.time} мин)</div>
           <div className="text-purple-400">⭐ Уровень {уровень}</div>
         </div>
-        <div className="text-xs text-gray-400 mt-1">
-          📊 Биржа обновится через: {времяДоОбновления()}
-        </div>
+        <div className="text-xs text-gray-400 mt-1">📊 Биржа обновится через: {времяДоОбновления()}</div>
         
         <div className="mt-2">
           <div className="flex justify-between text-xs mb-1">
@@ -402,27 +371,26 @@ function App() {
       </div>
       
       <div className="flex border-b border-gray-700 overflow-x-auto">
-        <button onClick={() => установитьВкладку('shop')} className={`flex-1 py-3 font-semibold text-sm whitespace-nowrap transition ${активнаяВкладка === 'shop' ? 'text-green-400 border-b-2 border-green-400' : 'text-gray-400 hover:text-white'}`}>🏪 Магазин</button>
-        <button onClick={() => установитьВкладку('inventory')} className={`flex-1 py-3 font-semibold text-sm whitespace-nowrap transition ${активнаяВкладка === 'inventory' ? 'text-green-400 border-b-2 border-green-400' : 'text-gray-400 hover:text-white'}`}>📦 Инвентарь</button>
-        <button onClick={() => установитьВкладку('craft')} className={`flex-1 py-3 font-semibold text-sm whitespace-nowrap transition ${активнаяВкладка === 'craft' ? 'text-green-400 border-b-2 border-green-400' : 'text-gray-400 hover:text-white'}`}>🔬 Лаборатория</button>
-        <button onClick={() => установитьВкладку('equipment')} className={`flex-1 py-3 font-semibold text-sm whitespace-nowrap transition ${активнаяВкладка === 'equipment' ? 'text-green-400 border-b-2 border-green-400' : 'text-gray-400 hover:text-white'}`}>🔧 Оборудование</button>
-        <button onClick={() => установитьВкладку('repair')} className={`flex-1 py-3 font-semibold text-sm whitespace-nowrap transition ${активнаяВкладка === 'repair' ? 'text-green-400 border-b-2 border-green-400' : 'text-gray-400 hover:text-white'}`}>🔧 Ремонт</button>
-        <button onClick={() => установитьВкладку('fusion')} className={`flex-1 py-3 font-semibold text-sm whitespace-nowrap transition ${активнаяВкладка === 'fusion' ? 'text-green-400 border-b-2 border-green-400' : 'text-gray-400 hover:text-white'}`}>🔮 Скрещивание</button>
-        <button onClick={() => установитьВкладку('cars')} className={`flex-1 py-3 font-semibold text-sm whitespace-nowrap transition ${активнаяВкладка === 'cars' ? 'text-green-400 border-b-2 border-green-400' : 'text-gray-400 hover:text-white'}`}>🚗 Автопарк</button>
-        <button onClick={() => установитьВкладку('tuning')} className={`flex-1 py-3 font-semibold text-sm whitespace-nowrap transition ${активнаяВкладка === 'tuning' ? 'text-green-400 border-b-2 border-green-400' : 'text-gray-400 hover:text-white'}`}>🔧 Тюнинг</button>
-        <button onClick={() => установитьВкладку('business')} className={`flex-1 py-3 font-semibold text-sm whitespace-nowrap transition ${активнаяВкладка === 'business' ? 'text-green-400 border-b-2 border-green-400' : 'text-gray-400 hover:text-white'}`}>🏢 Бизнес</button>
-        <button onClick={() => установитьВкладку('daily')} className={`flex-1 py-3 font-semibold text-sm whitespace-nowrap transition ${активнаяВкладка === 'daily' ? 'text-green-400 border-b-2 border-green-400' : 'text-gray-400 hover:text-white'}`}>🎁 Бонус</button>
-        <button onClick={() => установитьВкладку('referral')} className={`flex-1 py-3 font-semibold text-sm whitespace-nowrap transition ${активнаяВкладка === 'referral' ? 'text-green-400 border-b-2 border-green-400' : 'text-gray-400 hover:text-white'}`}>👥 Рефералы</button>
-        <button onClick={() => установитьВкладку('guild')} className={`flex-1 py-3 font-semibold text-sm whitespace-nowrap transition ${активнаяВкладка === 'guild' ? 'text-green-400 border-b-2 border-green-400' : 'text-gray-400 hover:text-white'}`}>🏆 Гильдия</button>
-        <button onClick={() => установитьВкладку('profile')} className={`flex-1 py-3 font-semibold text-sm whitespace-nowrap transition ${активнаяВкладка === 'profile' ? 'text-green-400 border-b-2 border-green-400' : 'text-gray-400 hover:text-white'}`}>👤 Профиль</button>
-        <button onClick={() => установитьВкладку('leaderboard')} className={`flex-1 py-3 font-semibold text-sm whitespace-nowrap transition ${активнаяВкладка === 'leaderboard' ? 'text-green-400 border-b-2 border-green-400' : 'text-gray-400 hover:text-white'}`}>🏆 Топ</button>
-        <button onClick={() => установитьВкладку('casino')} className={`flex-1 py-3 font-semibold text-sm whitespace-nowrap transition ${активнаяВкладка === 'casino' ? 'text-green-400 border-b-2 border-green-400' : 'text-gray-400 hover:text-white'}`}>🎰 Казино</button>
-        <button onClick={() => установитьВкладку('boxes')} className={`flex-1 py-3 font-semibold text-sm whitespace-nowrap transition ${активнаяВкладка === 'boxes' ? 'text-green-400 border-b-2 border-green-400' : 'text-gray-400 hover:text-white'}`}>📦 Боксы</button>
-        <button onClick={() => установитьВкладку('shardShop')} className={`flex-1 py-3 font-semibold text-sm whitespace-nowrap transition ${активнаяВкладка === 'shardShop' ? 'text-green-400 border-b-2 border-green-400' : 'text-gray-400 hover:text-white'}`}>💎 Магазин</button>
+        <button onClick={() => установитьВкладку('shop')} className={`flex-1 py-3 text-sm font-semibold whitespace-nowrap transition ${активнаяВкладка === 'shop' ? 'text-green-400 border-b-2 border-green-400' : 'text-gray-400 hover:text-white'}`}>🏪 Магазин</button>
+        <button onClick={() => установитьВкладку('inventory')} className={`flex-1 py-3 text-sm font-semibold whitespace-nowrap transition ${активнаяВкладка === 'inventory' ? 'text-green-400 border-b-2 border-green-400' : 'text-gray-400 hover:text-white'}`}>📦 Инвентарь</button>
+        <button onClick={() => установитьВкладку('craft')} className={`flex-1 py-3 text-sm font-semibold whitespace-nowrap transition ${активнаяВкладка === 'craft' ? 'text-green-400 border-b-2 border-green-400' : 'text-gray-400 hover:text-white'}`}>🔬 Лаборатория</button>
+        <button onClick={() => установитьВкладку('equipment')} className={`flex-1 py-3 text-sm font-semibold whitespace-nowrap transition ${активнаяВкладка === 'equipment' ? 'text-green-400 border-b-2 border-green-400' : 'text-gray-400 hover:text-white'}`}>🔧 Оборудование</button>
+        <button onClick={() => установитьВкладку('repair')} className={`flex-1 py-3 text-sm font-semibold whitespace-nowrap transition ${активнаяВкладка === 'repair' ? 'text-green-400 border-b-2 border-green-400' : 'text-gray-400 hover:text-white'}`}>🔧 Ремонт</button>
+        <button onClick={() => установитьВкладку('fusion')} className={`flex-1 py-3 text-sm font-semibold whitespace-nowrap transition ${активнаяВкладка === 'fusion' ? 'text-green-400 border-b-2 border-green-400' : 'text-gray-400 hover:text-white'}`}>🔮 Скрещивание</button>
+        <button onClick={() => установитьВкладку('cars')} className={`flex-1 py-3 text-sm font-semibold whitespace-nowrap transition ${активнаяВкладка === 'cars' ? 'text-green-400 border-b-2 border-green-400' : 'text-gray-400 hover:text-white'}`}>🚗 Автопарк</button>
+        <button onClick={() => установитьВкладку('tuning')} className={`flex-1 py-3 text-sm font-semibold whitespace-nowrap transition ${активнаяВкладка === 'tuning' ? 'text-green-400 border-b-2 border-green-400' : 'text-gray-400 hover:text-white'}`}>🔧 Тюнинг</button>
+        <button onClick={() => установитьВкладку('business')} className={`flex-1 py-3 text-sm font-semibold whitespace-nowrap transition ${активнаяВкладка === 'business' ? 'text-green-400 border-b-2 border-green-400' : 'text-gray-400 hover:text-white'}`}>🏢 Бизнес</button>
+        <button onClick={() => установитьВкладку('daily')} className={`flex-1 py-3 text-sm font-semibold whitespace-nowrap transition ${активнаяВкладка === 'daily' ? 'text-green-400 border-b-2 border-green-400' : 'text-gray-400 hover:text-white'}`}>🎁 Бонус</button>
+        <button onClick={() => установитьВкладку('referral')} className={`flex-1 py-3 text-sm font-semibold whitespace-nowrap transition ${активнаяВкладка === 'referral' ? 'text-green-400 border-b-2 border-green-400' : 'text-gray-400 hover:text-white'}`}>👥 Рефералы</button>
+        <button onClick={() => установитьВкладку('guild')} className={`flex-1 py-3 text-sm font-semibold whitespace-nowrap transition ${активнаяВкладка === 'guild' ? 'text-green-400 border-b-2 border-green-400' : 'text-gray-400 hover:text-white'}`}>🏆 Гильдия</button>
+        <button onClick={() => установитьВкладку('profile')} className={`flex-1 py-3 text-sm font-semibold whitespace-nowrap transition ${активнаяВкладка === 'profile' ? 'text-green-400 border-b-2 border-green-400' : 'text-gray-400 hover:text-white'}`}>👤 Профиль</button>
+        <button onClick={() => установитьВкладку('leaderboard')} className={`flex-1 py-3 text-sm font-semibold whitespace-nowrap transition ${активнаяВкладка === 'leaderboard' ? 'text-green-400 border-b-2 border-green-400' : 'text-gray-400 hover:text-white'}`}>🏆 Топ</button>
+        <button onClick={() => установитьВкладку('casino')} className={`flex-1 py-3 text-sm font-semibold whitespace-nowrap transition ${активнаяВкладка === 'casino' ? 'text-green-400 border-b-2 border-green-400' : 'text-gray-400 hover:text-white'}`}>🎰 Казино</button>
+        <button onClick={() => установитьВкладку('boxes')} className={`flex-1 py-3 text-sm font-semibold whitespace-nowrap transition ${активнаяВкладка === 'boxes' ? 'text-green-400 border-b-2 border-green-400' : 'text-gray-400 hover:text-white'}`}>📦 Боксы</button>
+        <button onClick={() => установитьВкладку('shardShop')} className={`flex-1 py-3 text-sm font-semibold whitespace-nowrap transition ${активнаяВкладка === 'shardShop' ? 'text-green-400 border-b-2 border-green-400' : 'text-gray-400 hover:text-white'}`}>💎 Магазин</button>
         
-        {/* Кнопка админ-панели — ВИДНА ТОЛЬКО АДМИНУ (по Telegram ID) */}
         {(userId === ADMIN_ID) && (
-          <button onClick={() => установитьВкладку('admin')} className={`flex-1 py-3 font-semibold text-sm whitespace-nowrap transition ${активнаяВкладка === 'admin' ? 'text-red-400 border-b-2 border-red-400' : 'text-gray-400 hover:text-white'}`}>👑 Админ</button>
+          <button onClick={() => установитьВкладку('admin')} className={`flex-1 py-3 text-sm font-semibold whitespace-nowrap transition ${активнаяВкладка === 'admin' ? 'text-red-400 border-b-2 border-red-400' : 'text-gray-400 hover:text-white'}`}>👑 Админ</button>
         )}
       </div>
       
@@ -457,7 +425,6 @@ function App() {
       {активнаяВкладка === 'casino' && <Casino />}
       {активнаяВкладка === 'boxes' && <Boxes />}
       {активнаяВкладка === 'shardShop' && <ShardShop />}
-      
       {активнаяВкладка === 'admin' && <AdminPanel />}
       
       <GuildInvites />
@@ -473,16 +440,9 @@ function App() {
                   <div className="text-white text-sm font-medium">
                     {НАЗВАНИЯ_АЧИВОК[уведомление.id] || уведомление.id}
                   </div>
-                  <div className="text-yellow-200 text-xs mt-1">
-                    +{уведомление.награда} EXP
-                  </div>
+                  <div className="text-yellow-200 text-xs mt-1">+{уведомление.награда} EXP</div>
                 </div>
-                <button 
-                  onClick={() => setУведомление(null)}
-                  className="text-white/70 hover:text-white text-xl leading-none"
-                >
-                  ✕
-                </button>
+                <button onClick={() => setУведомление(null)} className="text-white/70 hover:text-white text-xl leading-none">✕</button>
               </div>
             </div>
             <div className="h-1 bg-white/30">
