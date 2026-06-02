@@ -224,27 +224,13 @@ function App() {
         }
       `}</style>
       
-      {/* Шапка с аватаркой 12x12px, круглая, компактная */}
+      {/* Шапка без аватарки — только текст */}
       <div className="bg-gradient-to-r from-gray-800 to-gray-900 px-2 py-0.5 flex items-center gap-1.5 border-b border-gray-700 sticky top-0 z-20">
-        {telegramUser?.photo_url ? (
-          <div className="w-3 h-3 rounded-full overflow-hidden border border-green-500 flex-shrink-0">
-            <img 
-              src={telegramUser.photo_url} 
-              alt="avatar" 
-              className="w-full h-full object-cover"
-            />
-          </div>
-        ) : (
-          <div className="w-3 h-3 rounded-full bg-red-700 flex items-center justify-center text-[4px] border border-red-500 flex-shrink-0">
-            👑
-          </div>
-        )}
-        
         <div className="flex-1 min-w-0">
           {telegramUser ? (
             <div className="text-[9px] text-white truncate">
-              <span className="font-medium">{telegramUser.first_name?.slice(0, 12)}</span>
-              <span className="text-gray-400 ml-0.5">@{telegramUser.username?.slice(0, 10) || ''}</span>
+              <span className="font-medium">{telegramUser.first_name?.slice(0, 15)}</span>
+              <span className="text-gray-400 ml-0.5">@{telegramUser.username?.slice(0, 12) || ''}</span>
               <span className="text-gray-500 ml-0.5">• {userId?.slice(-4) || '—'}</span>
             </div>
           ) : (
