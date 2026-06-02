@@ -86,7 +86,6 @@ const RECIPES: Record<string, any> = {
 
 export default function Craft() {
   const [, forceUpdate] = useState(0)
-  const [завершениеАнимация, setЗавершениеАнимация] = useState(false)
   
   const инвентарь = useGameStore((state) => state.инвентарь || {})
   const оборудованиеИнстансы = useGameStore((state) => state.оборудованиеИнстансы) || {}
@@ -100,44 +99,6 @@ export default function Craft() {
     }, 1000)
     return () => clearInterval(interval)
   }, [])
-  
-  const завершитьКрафт = () => {
-    if (!активныйКрафт) {
-      alert('❌ Нет активной варки!')
-      return
-    }
-    
-    if (confirm('⚠️ Завершить варку сейчас? Вы получите готовый наркотик.')) {
-      setЗавершениеАнимация(true)
-      setTimeout(() => setЗавершениеАнимация(false), 1000)
-      
-      const { key, recipe } = активныйКрафт
-      const store = useGameStore.getState()
-      const текущийИнвентарь = store.инвентарь || {}
-      const статистика = store.статистика || { всегоСварено: {} }
-      
-      const новыйИнвентарь = {
-        ...текущийИнвентарь,
-        [key]: (текущийИнвентарь[key] || 0) + recipe.output
-      }
-      
-      const новаяСтатистика = {
-        ...статистика,
-        всегоСварено: {
-          ...статистика.всегоСварено,
-          [key]: (статистика.всегоСварено[key] || 0) + recipe.output
-        }
-      }
-      
-      useGameStore.setState({ 
-        инвентарь: новыйИнвентарь,
-        статистика: новаяСтатистика,
-        активныйКрафт: null
-      })
-      
-      alert(`✅ Варка завершена! +${recipe.output} грамм ${recipe.name}`)
-    }
-  }
   
   const начатьКрафт = async (key: string, recipe: any) => {
     if (активныйКрафт) {
@@ -221,7 +182,7 @@ export default function Craft() {
       <h2 className="text-lg font-semibold mb-3">🔬 Лаборатория</h2>
       
       {активныйКрафт && (
-        <div className={`bg-yellow-900/50 border border-yellow-500 rounded-lg p-3 mb-4 ${завершениеАнимация ? 'bubble' : ''}`}>
+        <div className="bg-yellow-900/50 border border-yellow-500 rounded-lg p-3 mb-4">
           <p className="text-yellow-400">⚙️ Варка: {активныйКрафт.recipe.name}</p>
           <p className="text-sm text-gray-400">Осталось: {форматВремени(getTimeLeft())}</p>
           <div className="w-full bg-gray-700 rounded-full h-2 mt-2">
@@ -230,12 +191,6 @@ export default function Craft() {
               style={{ width: `${прогресс()}%` }}
             />
           </div>
-          <button
-            onClick={завершитьКрафт}
-            className="mt-2 w-full py-1 rounded bg-red-600 hover:bg-red-700 text-sm transition transform hover:scale-105"
-          >
-            🔥 Завершить варку
-          </button>
         </div>
       )}
       
