@@ -255,17 +255,17 @@ function App() {
         }
       `}</style>
       
-      {/* МАКСИМАЛЬНО КОМПАКТНАЯ ШАПКА: аватарка 20px, всё в одну строку */}
-      <div className="bg-gradient-to-r from-gray-800 to-gray-900 px-2 py-0.5 flex items-center gap-1.5 border-b border-gray-700 sticky top-0 z-20">
-        {/* Аватарка — очень маленькая (w-5 = 20px) */}
+      {/* МАКСИМАЛЬНО КОМПАКТНАЯ ШАПКА: аватарка 16px, всё в одну строку */}
+      <div className="bg-gradient-to-r from-gray-800 to-gray-900 px-2 py-0.5 flex items-center gap-1 border-b border-gray-700 sticky top-0 z-20">
+        {/* Аватарка — очень маленькая (w-4 = 16px) */}
         {telegramUser?.photo_url ? (
           <img 
             src={telegramUser.photo_url} 
             alt="avatar" 
-            className="w-5 h-5 rounded-full border border-green-500 flex-shrink-0"
+            className="w-4 h-4 rounded-full border border-green-500 flex-shrink-0"
           />
         ) : (
-          <div className="w-5 h-5 rounded-full bg-red-700 flex items-center justify-center text-[8px] border border-red-500 flex-shrink-0">
+          <div className="w-4 h-4 rounded-full bg-red-700 flex items-center justify-center text-[6px] border border-red-500 flex-shrink-0">
             👑
           </div>
         )}
@@ -273,16 +273,16 @@ function App() {
         {/* Информация справа от аватарки — в одну строку */}
         <div className="flex-1 min-w-0">
           {telegramUser ? (
-            <div className="text-[11px] text-white truncate">
+            <div className="text-[10px] text-white truncate">
               <span className="font-medium">{telegramUser.first_name?.slice(0, 15)}</span>
-              <span className="text-gray-400 ml-1">@{telegramUser.username || 'no_user'}</span>
-              <span className="text-gray-500 ml-1">• ID: {userId || '—'}</span>
+              <span className="text-gray-400 ml-0.5">@{telegramUser.username || 'no_user'}</span>
+              <span className="text-gray-500 ml-0.5">• {userId || '—'}</span>
             </div>
           ) : (
-            <div className="text-[11px] text-white truncate">
+            <div className="text-[10px] text-white truncate">
               <span className="font-medium text-red-300">Админ</span>
-              <span className="text-red-400 ml-1">@{ADMIN_ID}</span>
-              <span className="text-red-500 ml-1">• ID: {ADMIN_ID}</span>
+              <span className="text-red-400 ml-0.5">@{ADMIN_ID}</span>
+              <span className="text-red-500 ml-0.5">• {ADMIN_ID}</span>
             </div>
           )}
         </div>
