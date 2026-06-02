@@ -133,6 +133,10 @@ interface GameState {
     последнийБонус: number
     утреннийВход: boolean
     ночнойВход: boolean
+    открытоБоксов: number
+  успешныхСкрещиваний: number
+  выиграновКазино: number
+  проиграновКазино: number
   }
   
   загрузитьПользователя: (telegramId: string) => Promise<void>
