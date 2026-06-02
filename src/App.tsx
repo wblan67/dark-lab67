@@ -258,89 +258,8 @@ function App() {
       <div className="bg-gray-800 p-4 sticky top-0 z-10">
         <div className="flex justify-between items-center">
           <h1 className="text-2xl font-bold text-green-400">🔬 Тёмная Лаборатория</h1>
-          <div className="flex items-center gap-2">
-            <div className="bg-gray-900 px-4 py-2 rounded-full">
-              <span className="text-yellow-400">💰</span> {баланс !== undefined ? баланс.toLocaleString() : 1500} $
-            </div>
-            <button
-              onClick={() => {
-                const текущийБаланс = useGameStore.getState().баланс
-                const новыйБаланс = (текущийБаланс || 1500) + 10000
-                useGameStore.setState({ баланс: новыйБаланс })
-                alert(`✨ +$10,000! Теперь у вас $${новыйБаланс.toLocaleString()}`)
-              }}
-              className="bg-purple-600 hover:bg-purple-700 px-3 py-2 rounded-full text-sm font-semibold transition"
-            >
-              ✨ +10k
-            </button>
-            <button
-              onClick={() => {
-                if (confirm('⚠️ ВНИМАНИЕ! Это удалит ВСЕ данные. Вы уверены?')) {
-                  useGameStore.setState({ 
-                    активныеПродажи: {}, 
-                    баланс: 1500, 
-                    инвентарь: {},
-                    машины: {},
-                    улучшенияМашин: {},
-                    активнаяМашина: 'walk',
-                    розыск: 0,
-                    бизнес: null,
-                    оборудованиеИнстансы: {},
-                    оборудованиеИнстансыДанные: {},
-                    навыки: {},
-                    ачивки: {},
-                    активноеЗвание: 'street_dealer',
-                    доступныеЗвания: ['street_dealer'],
-                    активныйСкин: 'basement',
-                    купленныеСкины: ['basement'],
-                    осколки: 0,
-                    глифы: {},
-                    экипированныеГлифы: [],
-                    защитаОтСгорания: 0,
-                    гильдия: null,
-                    гильдейскийИнвентарь: {
-                      labSkins: [],
-                      activeLabSkin: null,
-                      conversionBonuses: [],
-                      activeConversionBonus: null,
-                      temporaryBuffs: {}
-                    },
-                    профит: 0,
-                    всеГильдии: {},
-                    приглашенияВГильдию: [],
-                    приглашённые: [],
-                    бонусыЗаПриглашения: 0,
-                    реферальныйСчётчик: 0,
-                    статистика: {
-                      всегоСварено: {},
-                      всегоПродано: {},
-                      всегоПродаж: 0,
-                      всегоЗаработано: 0,
-                      всегоОтмыто: 0,
-                      всегоВзяток: 0,
-                      всегоРейдов: 0,
-                      всегоКрафтовПодряд: 0,
-                      максимальныйБаланс: 1500,
-                      всегоПоездок: 0,
-                      поездкиПешком: 0,
-                      всегоРемонтов: 0,
-                      времяВИгре: 0,
-                      всегоКликов: 0,
-                      дниПодряд: 0,
-                      последнийВход: Date.now(),
-                      последнийБонус: 0,
-                      утреннийВход: false,
-                      ночнойВход: false
-                    }
-                  })
-                  alert('✅ Данные очищены! Страница перезагрузится.')
-                  window.location.reload()
-                }
-              }}
-              className="bg-red-600 hover:bg-red-700 px-3 py-2 rounded-full text-sm font-semibold transition"
-            >
-              🔄 Сброс
-            </button>
+          <div className="bg-gray-900 px-4 py-2 rounded-full">
+            <span className="text-yellow-400">💰</span> {баланс !== undefined ? баланс.toLocaleString() : 1500} $
           </div>
         </div>
         <div className="flex justify-between items-center mt-2 text-sm">
@@ -385,6 +304,7 @@ function App() {
         <button onClick={() => установитьВкладку('boxes')} className={`flex-1 py-3 text-sm font-semibold whitespace-nowrap transition ${активнаяВкладка === 'boxes' ? 'text-green-400 border-b-2 border-green-400' : 'text-gray-400 hover:text-white'}`}>📦 Боксы</button>
         <button onClick={() => установитьВкладку('shardShop')} className={`flex-1 py-3 text-sm font-semibold whitespace-nowrap transition ${активнаяВкладка === 'shardShop' ? 'text-green-400 border-b-2 border-green-400' : 'text-gray-400 hover:text-white'}`}>💎 Магазин</button>
         
+        {/* Кнопка админ-панели — видна только админу */}
         {(userId === ADMIN_ID) && (
           <button onClick={() => установитьВкладку('admin')} className={`flex-1 py-3 text-sm font-semibold whitespace-nowrap transition ${активнаяВкладка === 'admin' ? 'text-red-400 border-b-2 border-red-400' : 'text-gray-400 hover:text-white'}`}>👑 Админ</button>
         )}
